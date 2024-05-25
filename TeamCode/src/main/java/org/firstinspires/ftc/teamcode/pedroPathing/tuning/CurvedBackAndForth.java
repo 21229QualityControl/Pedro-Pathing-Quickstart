@@ -30,7 +30,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
 public class CurvedBackAndForth extends OpMode {
     private Telemetry telemetryA;
 
-    public static double DISTANCE = 20;
+    public static double DISTANCE = 24;
 
     private boolean forward = true;
 

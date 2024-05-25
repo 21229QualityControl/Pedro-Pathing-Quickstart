@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.tuning;
 
+import android.util.Log;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
@@ -45,6 +47,10 @@ public class StraightBackAndForth extends OpMode {
      */
     @Override
     public void init() {
+        telemetryA = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+        telemetryA.addLine("init");
+        telemetryA.update();
+
         follower = new Follower(hardwareMap);
 
         forwards = new Path(new BezierLine(new Point(0,0, Point.CARTESIAN), new Point(DISTANCE,0, Point.CARTESIAN)));
@@ -54,7 +60,6 @@ public class StraightBackAndForth extends OpMode {
 
         follower.followPath(forwards);
 
-        telemetryA = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
         telemetryA.addLine("This will run the robot in a straight line going " + DISTANCE
                             + " inches forward. The robot will go forward and backward continuously"
                             + " along the path. Make sure you have enough room.");
@@ -68,6 +73,8 @@ public class StraightBackAndForth extends OpMode {
     @Override
     public void loop() {
         follower.update();
+        Log.d("current pose:", follower.getPose().toString());
+        Log.d("current point", follower.getNextPose().toString());
         if (!follower.isBusy()) {
             if (forward) {
                 forward = false;

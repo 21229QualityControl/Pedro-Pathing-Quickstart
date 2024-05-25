@@ -44,17 +44,24 @@ public class LocalizationTest extends OpMode {
      */
     @Override
     public void init() {
+        telemetryA = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
+        telemetryA.addLine("init");
+        telemetryA.update();
+
         poseUpdater = new PoseUpdater(hardwareMap);
 
         dashboardPoseTracker = new DashboardPoseTracker(poseUpdater);
 
         leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
-        leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
+        leftRear = hardwareMap.get(DcMotorEx.class, "leftBack");
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
-        rightRear = hardwareMap.get(DcMotorEx.class, "rightRear");
+        rightRear = hardwareMap.get(DcMotorEx.class, "rightBack");
 
-        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftRear.setDirection(DcMotorSimple.Direction.REVERSE);
+        // ??? is this correct?
+        leftFront.setDirection(DcMotorSimple.Direction.FORWARD);
+        leftRear.setDirection(DcMotorSimple.Direction.FORWARD);
+        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
 
         motors = Arrays.asList(leftFront, leftRear, rightFront, rightRear);
 
@@ -68,7 +75,7 @@ public class LocalizationTest extends OpMode {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         }
 
-        telemetryA = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
+
         telemetryA.addLine("This will print your robot's position to telemetry while "
                 + "allowing robot control through a basic mecanum drive on gamepad 1.");
         telemetryA.update();

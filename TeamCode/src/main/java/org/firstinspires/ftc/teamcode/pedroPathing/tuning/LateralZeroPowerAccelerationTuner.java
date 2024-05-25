@@ -47,7 +47,7 @@ public class LateralZeroPowerAccelerationTuner extends OpMode {
 
     private PoseUpdater poseUpdater;
 
-    public static double VELOCITY = 30;
+    public static double VELOCITY = 40;
 
     private double previousVelocity;
 
@@ -63,16 +63,23 @@ public class LateralZeroPowerAccelerationTuner extends OpMode {
      */
     @Override
     public void init() {
+        telemetryA = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
         poseUpdater = new PoseUpdater(hardwareMap);
 
+        telemetryA.addLine("init");
+        telemetryA.update();
+
         leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
-        leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
-        rightRear = hardwareMap.get(DcMotorEx.class, "rightRear");
+        leftRear = hardwareMap.get(DcMotorEx.class, "leftBack");
+        rightRear = hardwareMap.get(DcMotorEx.class, "rightBack");
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
 
         // TODO: Make sure that this is the direction your motors need to be reversed in.
-        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftRear.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFront.setDirection(DcMotorSimple.Direction.FORWARD);
+        leftRear.setDirection(DcMotorSimple.Direction.FORWARD);
+        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
+
 
         motors = Arrays.asList(leftFront, leftRear, rightFront, rightRear);
 
@@ -86,7 +93,7 @@ public class LateralZeroPowerAccelerationTuner extends OpMode {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         }
 
-        telemetryA = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
+
         telemetryA.addLine("The robot will run to the right until it reaches " + VELOCITY + " inches per second.");
         telemetryA.addLine("Then, it will cut power from the drivetrain and roll to a stop.");
         telemetryA.addLine("Make sure you have enough room.");
@@ -122,7 +129,7 @@ public class LateralZeroPowerAccelerationTuner extends OpMode {
         Vector heading = new Vector(1.0, poseUpdater.getPose().getHeading() - Math.PI/2);
         if (!end) {
             if (!stopping) {
-                if (MathFunctions.dotProduct(poseUpdater.getVelocity(), heading) > VELOCITY) {
+                if (Math.abs(MathFunctions.dotProduct(poseUpdater.getVelocity(), heading)) > VELOCITY) {
                     previousVelocity = MathFunctions.dotProduct(poseUpdater.getVelocity(), heading);
                     previousTimeNano = System.nanoTime();
                     stopping = true;

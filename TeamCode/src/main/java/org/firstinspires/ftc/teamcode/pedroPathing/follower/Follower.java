@@ -162,13 +162,15 @@ public class Follower {
         poseUpdater = new PoseUpdater(hardwareMap);
 
         leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
-        leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
-        rightRear = hardwareMap.get(DcMotorEx.class, "rightRear");
+        leftRear = hardwareMap.get(DcMotorEx.class, "leftBack");
+        rightRear = hardwareMap.get(DcMotorEx.class, "rightBack");
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
 
         // TODO: Make sure that this is the direction your motors need to be reversed in.
-        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftRear.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFront.setDirection(DcMotorSimple.Direction.FORWARD);
+        leftRear.setDirection(DcMotorSimple.Direction.FORWARD);
+        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
 
         motors = Arrays.asList(leftFront, leftRear, rightFront, rightRear);
 
@@ -234,6 +236,9 @@ public class Follower {
     public Pose getPose() {
         return poseUpdater.getPose();
     }
+
+    /** This returns the closest pose to the robot */
+    public Pose getNextPose() {return closestPose;}
 
     /**
      * This sets the current pose in the PoseUpdater without using offsets.
@@ -1080,6 +1085,7 @@ public class Follower {
         telemetry.addData("total heading", poseUpdater.getTotalHeading());
         telemetry.addData("velocity magnitude", getVelocity().getMagnitude());
         telemetry.addData("velocity heading", getVelocity().getTheta());
+        telemetry.addData("closest pose", closestPose);
         telemetry.update();
         if (drawOnDashboard) {
             Drawing.drawDebug(this);
