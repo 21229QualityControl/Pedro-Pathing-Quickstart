@@ -49,8 +49,8 @@ public class ThreeWheelLocalizer extends Localizer {
     private Pose strafeEncoderPose;
     private double totalHeading;
     public static double FORWARD_TICKS_TO_INCHES = -0.0029284; //8192 * 1.37795 * 2 * Math.PI * 0.5008239963;
-    public static double STRAFE_TICKS_TO_INCHES = 0.0029238; //8192 * 1.37795 * 2 * Math.PI * 0.5018874659;
-    public static double TURN_TICKS_TO_RADIANS = 0.00276591;
+    public static double STRAFE_TICKS_TO_INCHES = 0.0029984; //0.003, 0.0029345; 0.0029238; 8192 * 1.37795 * 2 * Math.PI * 0.5018874659;
+    public static double TURN_TICKS_TO_RADIANS = 0.00275614; // 0.0027637
 
     /**
      * This creates a new ThreeWheelLocalizer from a HardwareMap, with a starting Pose at (0,0)
