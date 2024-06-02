@@ -1,9 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.util;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.follower.Follower;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.PoseUpdater;
-
-import java.util.ArrayList;
 
 /**
  * This is the DashboardPoseTracker class. This tracks the pose history of the robot through a
@@ -33,8 +30,8 @@ public class DashboardPoseTracker {
         yPositions = new double[TRACKING_SIZE];
 
         for (int i = 0; i < TRACKING_SIZE; i++) {
-            xPositions[i] = poseUpdater.getPose().getX();
-            yPositions[i] = poseUpdater.getPose().getY();
+            xPositions[i] = poseUpdater.getPose().position.x;
+            yPositions[i] = poseUpdater.getPose().position.y;
         }
 
         lastUpdateTime = System.currentTimeMillis() - UPDATE_TIME;
@@ -51,8 +48,8 @@ public class DashboardPoseTracker {
                 xPositions[i] = xPositions[i - 1];
                 yPositions[i] = yPositions[i - 1];
             }
-            xPositions[0] = poseUpdater.getPose().getX();
-            yPositions[0] = poseUpdater.getPose().getY();
+            xPositions[0] = poseUpdater.getPose().position.x;
+            yPositions[0] = poseUpdater.getPose().position.y;
         }
     }
 

@@ -60,9 +60,9 @@ public class FowardTuner extends OpMode {
     public void loop() {
         poseUpdater.update();
 
-        telemetryA.addData("distance moved", poseUpdater.getPose().getX());
+        telemetryA.addData("distance moved", poseUpdater.getPose().position.x);
         telemetryA.addLine("The multiplier will display what your forward ticks to inches should be to scale your current distance to " + DISTANCE + " inches.");
-        telemetryA.addData("multiplier", DISTANCE / (poseUpdater.getPose().getX() / poseUpdater.getLocalizer().getForwardMultiplier()));
+        // telemetryA.addData("multiplier", DISTANCE / (poseUpdater.getPose().position.x ));
         telemetryA.update();
 
         Drawing.drawPoseHistory(dashboardPoseTracker, "#4CAF50");

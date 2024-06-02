@@ -4,6 +4,7 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+//import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -35,6 +36,7 @@ import java.util.List;
  * @version 1.0, 3/13/2024
  */
 @Config
+//@Disabled
 @Autonomous (name = "Strafe Velocity Tuner", group = "Autonomous Pathing Tuning")
 public class StrafeVelocityTuner extends OpMode {
     private ArrayList<Double> velocities = new ArrayList<>();
@@ -47,7 +49,7 @@ public class StrafeVelocityTuner extends OpMode {
 
     private PoseUpdater poseUpdater;
 
-    public static double DISTANCE = 60;
+    public static double DISTANCE = 40;
     public static double RECORD_NUMBER = 10;
 
     private Telemetry telemetryA;
@@ -68,10 +70,8 @@ public class StrafeVelocityTuner extends OpMode {
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
 
         // TODO: Make sure that this is the direction your motors need to be reversed in.
-        leftFront.setDirection(DcMotorSimple.Direction.FORWARD);
-        leftRear.setDirection(DcMotorSimple.Direction.FORWARD);
-        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftRear.setDirection(DcMotorSimple.Direction.REVERSE);
 
         motors = Arrays.asList(leftFront, leftRear, rightFront, rightRear);
 
@@ -122,7 +122,7 @@ public class StrafeVelocityTuner extends OpMode {
 
         poseUpdater.update();
         if (!end) {
-            if (Math.abs(poseUpdater.getPose().getY()) > DISTANCE) {
+            if (Math.abs(poseUpdater.getPose().position.y) > DISTANCE) {
                 end = true;
                 for (DcMotorEx motor : motors) {
                     motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -131,6 +131,9 @@ public class StrafeVelocityTuner extends OpMode {
             } else {
                 double currentVelocity = Math.abs(MathFunctions.dotProduct(poseUpdater.getVelocity(), new Vector(1, Math.PI/2)));
                 velocities.add(currentVelocity);
+                telemetryA.addLine("velocity: " + currentVelocity);
+                telemetryA.addLine("y: " + poseUpdater.getPose().position.y);
+                telemetryA.update();
                 velocities.remove(0);
             }
         } else {
@@ -139,7 +142,7 @@ public class StrafeVelocityTuner extends OpMode {
                 average += velocity;
             }
             average /= (double) velocities.size();
-
+            telemetryA.addLine("velocity count: " + velocities.size());
             telemetryA.addData("strafe velocity:", average);
             telemetryA.update();
         }

@@ -3,9 +3,10 @@ package org.firstinspires.ftc.teamcode.pedroPathing.util;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.Vector2d;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.follower.Follower;
-import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Path;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathChain;
@@ -31,7 +32,7 @@ public class Drawing {
         if (follower.getCurrentPath() != null) {
             drawPath(follower.getCurrentPath(), "#3F51B5");
             Point closestPoint = follower.getPointFromPath(follower.getCurrentPath().getClosestPointTValue());
-            drawRobot(new Pose(closestPoint.getX(), closestPoint.getY(), follower.getCurrentPath().getHeadingGoal(follower.getCurrentPath().getClosestPointTValue())), "#3F51B5");
+            drawRobot(new Pose2d(closestPoint.getX(), closestPoint.getY(), follower.getCurrentPath().getHeadingGoal(follower.getCurrentPath().getClosestPointTValue())), "#3F51B5");
         }
         drawPoseHistory(follower.getDashboardPoseTracker(), "#4CAF50");
         drawRobot(follower.getPose(), "#4CAF50");
@@ -45,11 +46,12 @@ public class Drawing {
      * @param pose the Pose to draw the robot at
      * @param color the color to draw the robot with
      */
-    public static void drawRobot(Pose pose, String color) {
+    public static void drawRobot(Pose2d pose, String color) {
         if (packet == null) packet = new TelemetryPacket();
 
         packet.fieldOverlay().setStroke(color);
-        Drawing.drawRobotOnCanvas(packet.fieldOverlay(), pose.copy());
+        Pose2d newPose = new Pose2d(pose.position.x,pose.position.y, pose.heading.toDouble());
+        Drawing.drawRobotOnCanvas(packet.fieldOverlay(), newPose);
     }
 
     /**
@@ -132,15 +134,15 @@ public class Drawing {
      * @param c the Canvas on the Dashboard on which this will draw
      * @param t the Pose to draw at
      */
-    public static void drawRobotOnCanvas(Canvas c, Pose t) {
+    public static void drawRobotOnCanvas(Canvas c, Pose2d t) {
         final double ROBOT_RADIUS = 9;
+        c.setStrokeWidth(1);
+        c.strokeCircle(t.position.x, t.position.y, ROBOT_RADIUS);
 
-        c.strokeCircle(t.getX(), t.getY(), ROBOT_RADIUS);
-        Vector v = t.getHeadingVector();
-        v.setMagnitude(v.getMagnitude() * ROBOT_RADIUS);
-        double x1 = t.getX() + v.getXComponent() / 2, y1 = t.getY() + v.getYComponent() / 2;
-        double x2 = t.getX() + v.getXComponent(), y2 = t.getY() + v.getYComponent();
-        c.strokeLine(x1, y1, x2, y2);
+        Vector2d halfv = t.heading.vec().times(0.5 * ROBOT_RADIUS);
+        Vector2d p1 = t.position.plus(halfv);
+        Vector2d p2 = p1.plus(halfv);
+        c.strokeLine(p1.x, p1.y, p2.x, p2.y);
     }
 
     /**

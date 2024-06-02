@@ -57,7 +57,6 @@ public class LocalizationTest extends OpMode {
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
         rightRear = hardwareMap.get(DcMotorEx.class, "rightBack");
 
-        // ??? is this correct?
         leftFront.setDirection(DcMotorSimple.Direction.FORWARD);
         leftRear.setDirection(DcMotorSimple.Direction.FORWARD);
         rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -111,10 +110,9 @@ public class LocalizationTest extends OpMode {
         rightFront.setPower(rightFrontPower);
         rightRear.setPower(rightRearPower);
 
-        telemetryA.addData("x", poseUpdater.getPose().getX());
-        telemetryA.addData("y", poseUpdater.getPose().getY());
-        telemetryA.addData("heading", poseUpdater.getPose().getHeading());
-        telemetryA.addData("total heading", poseUpdater.getTotalHeading());
+        telemetryA.addData("x", poseUpdater.getPose().position.x);
+        telemetryA.addData("y", poseUpdater.getPose().position.y);
+        telemetryA.addData("heading", poseUpdater.getPose().heading.toDouble());
         telemetryA.update();
 
         Drawing.drawPoseHistory(dashboardPoseTracker, "#4CAF50");

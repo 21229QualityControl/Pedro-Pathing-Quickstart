@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
+import com.acmerobotics.roadrunner.Pose2d;
 
 /**
  * This is the MathFunctions class. This contains many useful math related methods that I use in
@@ -105,25 +105,25 @@ public class MathFunctions {
     }
 
     /**
-     * This returns the distance between a Pose and a Point,
+     * This returns the distance between a Pose2d and a Point,
      *
-     * @param pose this is the Pose.
+     * @param pose this is the Pose2d.
      * @param point this is the Point.
      * @return returns the distance between the two.
      */
-    public static double distance(Pose pose, Point point) {
-        return Math.sqrt(Math.pow(pose.getX()-point.getX(), 2) + Math.pow(pose.getY()-point.getY(), 2));
+    public static double distance(Pose2d pose, Point point) {
+        return Math.sqrt(Math.pow(pose.position.x-point.getX(), 2) + Math.pow(pose.position.y-point.getY(), 2));
     }
 
     /**
-     * This returns the distance between a Pose and another Pose.
+     * This returns the distance between a Pose2d and another Pose2d.
      *
-     * @param one this is the first Pose.
-     * @param two this is the second Pose.
+     * @param one this is the first Pose2d.
+     * @param two this is the second Pose2d.
      * @return returns the distance between the two.
      */
-    public static double distance(Pose one, Pose two) {
-        return Math.sqrt(Math.pow(one.getX()-two.getX(), 2) + Math.pow(one.getY()-two.getY(), 2));
+    public static double distance(Pose2d one, Pose2d two) {
+        return Math.sqrt(Math.pow(one.position.x-two.position.x, 2) + Math.pow(one.position.y-two.position.y, 2));
     }
 
     /**
@@ -138,17 +138,6 @@ public class MathFunctions {
     }
 
     /**
-     * This returns a Pose that is the sum of the two input Pose.
-     *
-     * @param one the first Pose
-     * @param two the second Pose
-     * @return returns the sum of the two Pose.
-     */
-    public static Pose addPoses(Pose one, Pose two) {
-        return new Pose(one.getX() + two.getX(), one.getY() + two.getY(), one.getHeading() + two.getHeading());
-    }
-
-    /**
      * This subtracts the second Point from the first Point and returns the result as a Point.
      * Do note that order matters here.
      *
@@ -158,18 +147,6 @@ public class MathFunctions {
      */
     public static Point subtractPoints(Point one, Point two) {
         return new Point(one.getX() - two.getX(), one.getY() - two.getY(), Point.CARTESIAN);
-    }
-
-    /**
-     * This subtracts the second Pose from the first Pose and returns the result as a Pose.
-     * Do note that order matters here.
-     *
-     * @param one the first Pose.
-     * @param two the second Pose.
-     * @return returns the difference of the two Pose.
-     */
-    public static Pose subtractPoses(Pose one, Pose two) {
-        return new Pose(one.getX() - two.getX(), one.getY() - two.getY(), one.getHeading() - two.getHeading());
     }
 
     /**

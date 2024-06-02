@@ -4,7 +4,6 @@ package org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration;
 import org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * This is the BezierCurve class. This class handles the creation of Bezier curves, which are used
@@ -60,6 +59,7 @@ public class BezierCurve {
             }
         }
         this.controlPoints = controlPoints;
+
         initialize();
     }
 
@@ -195,7 +195,7 @@ public class BezierCurve {
     public double getCurvature(double t) {
         t = MathFunctions.clamp(t, 0, 1);
         Vector derivative = getDerivative(t);
-        Vector secondDerivative = getSecondDerivative(t);
+        Vector secondDerivative = new Vector(getSecondDerivative(t).getMagnitude(), getApproxSecondDerivative(t).getTheta());
 
         if (derivative.getMagnitude() == 0) return 0;
         return (MathFunctions.crossProduct(derivative, secondDerivative))/Math.pow(derivative.getMagnitude(),3);

@@ -38,8 +38,8 @@ public class TeleOpEnhancements extends OpMode {
         follower = new Follower(hardwareMap, false);
 
         leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
-        leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
-        rightRear = hardwareMap.get(DcMotorEx.class, "rightRear");
+        leftRear = hardwareMap.get(DcMotorEx.class, "leftBack");
+        rightRear = hardwareMap.get(DcMotorEx.class, "rightBack");
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
 
         leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -59,9 +59,9 @@ public class TeleOpEnhancements extends OpMode {
     public void loop() {
         driveVector.setOrthogonalComponents(-gamepad1.left_stick_y, -gamepad1.left_stick_x);
         driveVector.setMagnitude(MathFunctions.clamp(driveVector.getMagnitude(), 0, 1));
-        driveVector.rotateVector(follower.getPose().getHeading());
+        driveVector.rotateVector(follower.getPose().heading.toDouble());
 
-        headingVector.setComponents(-gamepad1.left_stick_x, follower.getPose().getHeading());
+        headingVector.setComponents(-gamepad1.left_stick_x, follower.getPose().heading.toDouble());
 
         follower.setMovementVectors(follower.getCentripetalForceCorrection(), headingVector, driveVector);
         follower.update();
