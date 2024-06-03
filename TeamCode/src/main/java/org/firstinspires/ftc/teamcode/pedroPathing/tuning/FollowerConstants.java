@@ -42,9 +42,9 @@ public class FollowerConstants {
 
     // Small heading error PIDF coefficients
     public static CustomPIDFCoefficients smallHeadingPIDFCoefficients = new CustomPIDFCoefficients(
-            3.,
+            2,
             0,
-            0.2,
+            0.05,
             0);
 
     // Feed forward constant added on to the small heading PIDF
@@ -72,9 +72,9 @@ public class FollowerConstants {
 
     // Small translational PIDF coefficients
     public static CustomPIDFCoefficients smallTranslationalPIDFCoefficients = new CustomPIDFCoefficients(
-            0.3,
+            0.1,
             0,
-            0.01,
+            0.04,
             0);
 
     // Small translational Integral value
@@ -92,7 +92,7 @@ public class FollowerConstants {
     public static CustomPIDFCoefficients largeDrivePIDFCoefficients = new CustomPIDFCoefficients(
             0.015,
             0,
-            0.0005,
+            0.00005,
             0);
 
     // Feed forward constant added on to the large drive PIDF
@@ -103,9 +103,9 @@ public class FollowerConstants {
 
     // Small drive PIDF coefficients
     public static CustomPIDFCoefficients smallDrivePIDFCoefficients = new CustomPIDFCoefficients(
-            0.015,
+            0.01,
             0,
-            0.000005,
+            0.000003,
             0);
 
     // Feed forward constant added on to the small drive PIDF
@@ -136,7 +136,7 @@ public class FollowerConstants {
     // Decreasing this will cause the deceleration at the end of the Path to be slower, making the
     // robot slower but reducing risk of end-of-path overshoots or localization slippage.
     // This can be set individually for each Path, but this is the default.
-    public static double zeroPowerAccelerationMultiplier = 4;
+    public static double zeroPowerAccelerationMultiplier = 5;
 
     // When the robot is at the end of its current Path or PathChain and the velocity goes below
     // this value, then end the Path. This is in inches/second.

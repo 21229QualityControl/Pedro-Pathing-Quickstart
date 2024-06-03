@@ -92,21 +92,21 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
 
         int cycleCount = 0;
 
-        double y_position0 = 11.0;
-        double y_position = 12.0;
+        double y_position0 = 9;
+        double y_position = 10;
         while(cycleCount++ < 3) {
 
             // cycle
             Pose2d backdrop0 = follower.getPose();
 
             if(cycleCount == 2) {
-                y_position0 = 12.0;
-                y_position = 12.5;
+                y_position0 = 10;
+                y_position = 10.5;
                 follower.setPose(new Pose2d(backdrop0.position.x, backdrop0.position.y-0.5,backdrop0.heading.toDouble()));
             }
             if(cycleCount == 3) {
-                y_position0 = 12.5;
-                y_position = 13.0;
+                y_position0 = 10.5;
+                y_position = 11.0;
                 follower.setPose(new Pose2d(backdrop0.position.x, backdrop0.position.y-1.5,backdrop0.heading.toDouble()));
             }
 

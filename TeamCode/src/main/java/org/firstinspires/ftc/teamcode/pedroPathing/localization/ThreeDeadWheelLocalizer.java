@@ -73,6 +73,7 @@ public class ThreeDeadWheelLocalizer implements Localizer {
         YawPitchRollAngles angles = imu.getRobotYawPitchRollAngles();
         AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.RADIANS);
         Rotation2d heading = Rotation2d.exp(angles.getYaw(AngleUnit.RADIANS));
+        Log.d("IMU heading: ", Double.toString(angles.getYaw(AngleUnit.RADIANS)));
 
         // see https://github.com/FIRST-Tech-Challenge/FtcRobotController/issues/617
         double rawHeadingVel = angularVelocity.zRotationRate;
@@ -104,7 +105,7 @@ public class ThreeDeadWheelLocalizer implements Localizer {
         int perpPosDelta = perpPosVel.position - lastPerpPos;
         double headingDelta = heading.minus(lastHeading);
         lastHeading = heading;
-        if (Math.abs(headingVel) < Math.toRadians(0)) { // Use dead wheels when heading change low low
+        if (Math.abs(headingVel) < Math.toRadians(0)) { // We don't use dead wheels for heading anymore :(
             headingDelta = (par0PosDelta - par1PosDelta) / (PARAMS.par0YTicks - PARAMS.par1YTicks);
             headingVel =  (par0PosVel.velocity - par1PosVel.velocity) / (PARAMS.par0YTicks - PARAMS.par1YTicks);
         }
