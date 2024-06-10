@@ -47,18 +47,18 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
         ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
         Follower follower = new Follower(hardwareMap);
-        follower.setStartingPose(new Pose2d(14.5, 62, Math.toRadians(-90)));
+        follower.setStartingPose(new Pose2d(12, 62, Math.toRadians(-90)));
 
         Point backdrop = new Point(48.0,36.0, Point.CARTESIAN);
         Point cycle = new Point(48.0,30.0, Point.CARTESIAN);
         Point cycle1 = new Point(45.0,30.0, Point.CARTESIAN);
 
         Path purplePath = new Path(
-                new BezierCurve(new Point(14.5, 62.0, Point.CARTESIAN),
+                new BezierCurve(new Point(12, 62.0, Point.CARTESIAN),
                         new Point(32.0, 23.0, Point.CARTESIAN)));
 
         purplePath.setLinearHeadingInterpolation(Math.toRadians(-90), Math.toRadians(180));
-        purplePath.setZeroPowerAccelerationMultiplier(3.5);
+        purplePath.setZeroPowerAccelerationMultiplier(5);
 
         sched.addAction(
                 new SequentialAction(
@@ -77,7 +77,7 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
         // drop yellow
 //        yellowPath.setLinearHeadingInterpolation(currentPose.heading.toDouble(), Math.toRadians(180));
         yellowPath.setConstantHeadingInterpolation(Math.toRadians(180));
-        yellowPath.setZeroPowerAccelerationMultiplier(2.5);
+        yellowPath.setZeroPowerAccelerationMultiplier(5);
         //yellowPath.setReversed(true);
 
         follower.update();
@@ -92,36 +92,37 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
 
         int cycleCount = 0;
 
-        double y_position0 = 9;
-        double y_position = 10;
+//        double y_position0 = 9;
+        double y_position = 9;
         while(cycleCount++ < 3) {
 
             // cycle
             Pose2d backdrop0 = follower.getPose();
 
             if(cycleCount == 2) {
-                y_position0 = 10;
-                y_position = 10.5;
-                follower.setPose(new Pose2d(backdrop0.position.x, backdrop0.position.y-0.5,backdrop0.heading.toDouble()));
+//                y_position0 = 10;
+//                y_position = 10.5;
+                follower.setPose(new Pose2d(backdrop0.position.x, backdrop0.position.y,backdrop0.heading.toDouble()));
             }
             if(cycleCount == 3) {
-                y_position0 = 10.5;
-                y_position = 11.0;
-                follower.setPose(new Pose2d(backdrop0.position.x, backdrop0.position.y-1.5,backdrop0.heading.toDouble()));
+//                y_position0 = 10.5;
+//                y_position = 11.0;
+                follower.setPose(new Pose2d(backdrop0.position.x, backdrop0.position.y,backdrop0.heading.toDouble()));
             }
 
             Point stagePoint = new Point(backdrop0.position.x, backdrop0.position.y, Point.CARTESIAN);
 
             Path toStack = new Path(new BezierCurve(stagePoint,
-                    new Point(45, y_position0, Point.CARTESIAN),
+                    new Point(45, y_position, Point.CARTESIAN),
                     new Point(24, y_position, Point.CARTESIAN),
 //                    new Point(-0, y_position, Point.CARTESIAN)));
                     new Point(-24, y_position, Point.CARTESIAN),
                     new Point(-54, y_position, Point.CARTESIAN)));
 
-            toStack.setZeroPowerAccelerationMultiplier(4.5);
+            toStack.setZeroPowerAccelerationMultiplier(5);
             toStack.setConstantHeadingInterpolation(Math.PI);
 
+            Log.d("heading:", Double.toString(follower.getPose().heading.toDouble()));
             sched.addAction(
                     new SequentialAction(
                             new DrivePoseLoggingAction(follower, "stack_path_begin"),
@@ -130,19 +131,19 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
                             new SleepAction(1.5)
                     ));
             sched.run();
+            Log.d("heading:", Double.toString(follower.getPose().heading.toDouble()));
 
             Pose2d stack0 = follower.getPose();
             Point stackPoint = new Point(stack0.position.x, stack0.position.y, Point.CARTESIAN);
             Path toStage = new Path(new BezierCurve(stackPoint,
-                    new Point(8, 12.0, Point.CARTESIAN),
-                    new Point(32,
-                            12.0, Point.CARTESIAN),
+                    new Point(8, 9, Point.CARTESIAN),
+                    new Point(32, 9, Point.CARTESIAN),
 //                    cycle1,
                     cycle));
 
             toStage.setReversed(true);
             toStage.setConstantHeadingInterpolation(Math.toRadians(180));
-            toStage.setZeroPowerAccelerationMultiplier(2.25);
+            toStage.setZeroPowerAccelerationMultiplier(5);
 
             // drop yellow
             sched.addAction(

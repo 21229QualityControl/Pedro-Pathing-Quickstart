@@ -29,7 +29,7 @@ public class FollowerConstants {
 
     // Large heading error PIDF coefficients
     public static CustomPIDFCoefficients largeHeadingPIDFCoefficients = new CustomPIDFCoefficients(
-            1,
+            3,
             0,
             0.2,
             0);

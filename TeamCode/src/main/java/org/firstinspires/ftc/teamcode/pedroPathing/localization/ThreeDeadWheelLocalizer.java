@@ -130,7 +130,7 @@ public class ThreeDeadWheelLocalizer implements Localizer {
                                 (PARAMS.par0YTicks * par1PosVel.velocity - PARAMS.par1YTicks * par0PosVel.velocity) / (PARAMS.par0YTicks - PARAMS.par1YTicks),
                         }).times(inPerTick),
                         new DualNum<Time>(new double[] {
-                                (PARAMS.perpXTicks / (PARAMS.par0YTicks - PARAMS.par1YTicks) * (par1PosDelta - par0PosDelta) + perpPosDelta),
+                                (-PARAMS.perpXTicks * headingDelta + perpPosDelta*1.025),
                                 (PARAMS.perpXTicks / (PARAMS.par0YTicks - PARAMS.par1YTicks) * (par1PosVel.velocity - par0PosVel.velocity) + perpPosVel.velocity),
                         }).times(inPerTick)
                 ),

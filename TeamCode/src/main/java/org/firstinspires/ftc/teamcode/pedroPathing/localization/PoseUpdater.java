@@ -46,7 +46,7 @@ public class PoseUpdater {
     private long previousPoseTime;
     private long currentPoseTime;
 
-    public double inPerTick = 0.002948; //0.002934; //24.0 / 8163.0;
+    public double inPerTick = 24.0 / 8050.0; //0.002948; 0.002934; //24.0 / 8163.0;
     public double lateralInPerTick = 0.00273;
     public double trackWidthTicks = 4665.3368763274475;//4810.861094343746;//4623.060031773916;//4620.300191769058; //4982.1078188621495; //4691.229665989946;
 
