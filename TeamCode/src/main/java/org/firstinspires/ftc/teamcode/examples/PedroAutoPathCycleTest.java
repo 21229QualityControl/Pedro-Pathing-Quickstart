@@ -240,15 +240,9 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
     }
 
     final public void update() {
-        /* ideally we call update() for intake, outtake, and follower in the auto scheduler callback
-
         intake.update();
         outtake.update();
 
-        if(follower != null) {
-            follower.update();
-        }
-        */
         telemetry.addData("Time left", 30 - getRuntime());
     }
 }

@@ -107,9 +107,6 @@ public class DualMotorWithPID {
         public boolean run(TelemetryPacket packet) {
             if (getTargetPosition() != position) {
                 setTargetPosition(position);
-                // note: update() is added to make auto working
-                // it may not work for teleop mode
-                update();
                 if (blocking) {
                     return true;
                 }
