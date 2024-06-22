@@ -65,15 +65,16 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
         Follower follower = new Follower(hardwareMap);
         follower.setStartingPose(new Pose2d(12, 62, Math.toRadians(-90)));
 
-        Point backdrop = new Point(48.0,36.0, Point.CARTESIAN);
-        Point cycle = new Point(48.0,30.0, Point.CARTESIAN);
-        Point cycle1 = new Point(45.0,30.0, Point.CARTESIAN);
+        Point backdrop = new Point(51.0,36.0, Point.CARTESIAN);
+        Point pastTruss = new Point(21.0, 9.0, Point.CARTESIAN);
+        Point cycle = new Point(47.0,30.0, Point.CARTESIAN);
+//        Point backstage = new Point(24.0, 30.0, Point.CARTESIAN);
 
         // make the scoring spike path
         // TODO: add randomization and vision code to this
         Path purplePath = new Path(
                 new BezierCurve(new Point(12, 62.0, Point.CARTESIAN),
-                        new Point(32.0, 23.0, Point.CARTESIAN)));
+                        new Point(32.0, 28.0, Point.CARTESIAN)));
 
         purplePath.setLinearHeadingInterpolation(Math.toRadians(-90), Math.toRadians(180), 0.8);
         purplePath.setZeroPowerAccelerationMultiplier(4);
@@ -84,15 +85,15 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
                 new SequentialAction(
                         new DrivePoseLoggingAction(follower, "purple_path_begin", true),
                         new FollowPathAction(follower, purplePath, false),
-                        new DrivePoseLoggingAction(follower, "purple_path_end"),
-                        new SleepAction(0.5)
+                        new DrivePoseLoggingAction(follower, "purple_path_end")
                 ));
         sched.addAction(intake.wristStored());
         sched.run();
 
         Pose2d currentPose = follower.getPose();
         //follower.setStartingPose(currentPose);
-
+        Log.d("purplePoseX:", Double.toString(currentPose.position.x));
+        Log.d("purplePoseY:", Double.toString(currentPose.position.y));
         // create yellow pixel path
         Path yellowPath = new Path(new BezierLine(new Point(currentPose), backdrop));
 //        yellowPath.setLinearHeadingInterpolation(currentPose.heading.toDouble(), Math.toRadians(180));
@@ -101,16 +102,18 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
         //yellowPath.setReversed(true);
 
         follower.update();
-        // score yellow pixel
-        sched.addAction(
+        sched.addAction(new ParallelAction(
                 new SequentialAction(
                         new DrivePoseLoggingAction(follower, "yellow_path_begin"),
                         new FollowPathAction(follower, yellowPath),
-                        new DrivePoseLoggingAction(follower, "yellow_path_end"),
-                        new SleepAction(1.25),
-                        outtake.extendOuttakeCloseBlocking(),
-                        outtake.armScoring(),
-                        outtake.wristVerticalFlip()));
+                        new DrivePoseLoggingAction(follower, "yellow_path_end"
+                )),
+                new SequentialAction(
+                    outtake.extendOuttakeCloseBlocking(),
+                    outtake.armScoring(),
+                    outtake.wristVerticalFlip()
+                )
+        ));
         sched.addAction(outtake.clawOpen());
         sched.run();
 
@@ -137,9 +140,8 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
             Path toStack = new Path(new BezierCurve(stagePoint,
                     new Point(45, y_position, Point.CARTESIAN),
                     new Point(24, y_position, Point.CARTESIAN),
-//                    new Point(-0, y_position, Point.CARTESIAN)));
                     new Point(-24, y_position, Point.CARTESIAN),
-                    new Point(-54, y_position, Point.CARTESIAN)));
+                    new Point(-59, 8.0, Point.CARTESIAN)));
 
             toStack.setZeroPowerAccelerationMultiplier(5);
             toStack.setConstantHeadingInterpolation(Math.PI);
@@ -150,8 +152,7 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
                     new SequentialAction(
                             new DrivePoseLoggingAction(follower, "stack_path_begin"),
                             new FollowPathAction(follower, toStack),
-                            new DrivePoseLoggingAction(follower, "stack_path_end"),
-                            new SleepAction(1.5)
+                            new DrivePoseLoggingAction(follower, "stack_path_end")
                     ),
                     new SequentialAction(
                             new WaitPositionCommand(follower, 48, false, true), // Away from backdrop
@@ -163,7 +164,7 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
                             new WaitPositionCommand(follower, 24, false, true), // intermediate
                             new SequentialAction(
 //                                    intake.prepIntakeCount(first || nextStack, false),
-                                    intake.prepIntakeCount(true, false),
+                                    intake.prepIntakeCount(cycleCount == 2 || cycleCount == 3 ? false : true, false),
 //                                    nextStack ? intake.intakeOn() : intake.intakeSlow(),
                                     intake.intakeOn(),
                                     outtake.extendOuttakeBarelyOut()
@@ -179,24 +180,32 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
 
             Pose2d stack0 = follower.getPose();
             Point stackPoint = new Point(stack0.position.x, stack0.position.y, Point.CARTESIAN);
-            // make path to backdrop
-            Path toStage = new Path(new BezierCurve(stackPoint,
+            // make path to backstage
+            Path toBackstage = new Path(new BezierCurve(stackPoint,
                     new Point(8, 9, Point.CARTESIAN),
-                    new Point(32, 9, Point.CARTESIAN),
-//                    cycle1,
+                    new Point(36, 9, Point.CARTESIAN),
+                    new Point(44, 9, Point.CARTESIAN),
+                    new Point(30, 25, Point.CARTESIAN),
+                    new Point(40, 25, Point.CARTESIAN),
                     cycle));
 
-            toStage.setReversed(true);
-            toStage.setConstantHeadingInterpolation(Math.toRadians(180));
-            toStage.setZeroPowerAccelerationMultiplier(5);
+            toBackstage.setReversed(true);
+            toBackstage.setConstantHeadingInterpolation(Math.toRadians(180));
+            toBackstage.setZeroPowerAccelerationMultiplier(5);
+
+            // make path to backdrop
+//            Path toBackdrop = new Path(new BezierCurve(pastTruss,
+//                    cycle));
+//            toBackdrop.setReversed(true);
+//            toBackdrop.setZeroPowerAccelerationMultiplier(5);
+//            toBackdrop.setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(200), 0.8);
 
             // drive to backdrop, score pixels
             sched.addAction(new ParallelAction(
                     new SequentialAction(
                             new DrivePoseLoggingAction(follower, "stage_path_begin"),
-                            new FollowPathAction(follower, toStage),
+                            new FollowPathAction(follower, toBackstage),
                             new DrivePoseLoggingAction(follower, "stage_path_end"),
-                            new SleepAction(1.25),
                             new DrivePoseLoggingAction(follower, "cycle_end")
                     ),
                     new SequentialAction(

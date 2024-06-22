@@ -202,6 +202,7 @@ public class Intake {
       if (numIntaked >= WRIST_LEFT_STACK_POSITIONS.length) {
          numIntaked = WRIST_LEFT_STACK_POSITIONS.length-1;
       }
+      Log.d("numIntaked:", Double.toString(numIntaked));
       return new SequentialAction(
               intakeOn(),
               wristStack(numIntaked)
@@ -253,6 +254,7 @@ public class Intake {
          }
 
          if (pixelCount() < 2 && System.currentTimeMillis() >= waitUntil) {
+            Log.d("numIntaked:", Double.toString(numIntaked));
             wristStackInstant(numIntaked);
             numIntaked++;
             if (numIntaked >= WRIST_LEFT_STACK_POSITIONS.length) {
