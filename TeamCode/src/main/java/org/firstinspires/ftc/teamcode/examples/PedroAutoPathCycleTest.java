@@ -25,6 +25,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.PoseMessage;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.WaitPositionCommand;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
+import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathChain;
 
 
 @Config
@@ -66,7 +67,7 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
         follower.setStartingPose(new Pose2d(12, 62, Math.toRadians(-90)));
 
         Point backdrop = new Point(51.0,36.0, Point.CARTESIAN);
-        Point pastTruss = new Point(21.0, 9.0, Point.CARTESIAN);
+//        Point pastTruss = new Point(21.0, 9.0, Point.CARTESIAN);
         Point cycle = new Point(47.0,30.0, Point.CARTESIAN);
 //        Point backstage = new Point(24.0, 30.0, Point.CARTESIAN);
 
@@ -115,6 +116,7 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
                 )
         ));
         sched.addAction(outtake.clawOpen());
+        sched.addAction(new SleepAction(0.5));
         sched.run();
 
         int cycleCount = 0;
@@ -180,31 +182,41 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
 
             Pose2d stack0 = follower.getPose();
             Point stackPoint = new Point(stack0.position.x, stack0.position.y, Point.CARTESIAN);
-            // make path to backstage
-            Path toBackstage = new Path(new BezierCurve(stackPoint,
-                    new Point(8, 9, Point.CARTESIAN),
-                    new Point(36, 9, Point.CARTESIAN),
-                    new Point(44, 9, Point.CARTESIAN),
-                    new Point(30, 25, Point.CARTESIAN),
-                    new Point(40, 25, Point.CARTESIAN),
-                    cycle));
-
-            toBackstage.setReversed(true);
-            toBackstage.setConstantHeadingInterpolation(Math.toRadians(180));
-            toBackstage.setZeroPowerAccelerationMultiplier(5);
+            // make path past the truss
+//            Path pastTruss = new Path(new BezierLine(stackPoint,
+//                    new Point(24, 9, Point.CARTESIAN)
+//                   ));
+//
+//            pastTruss.setReversed(true);
+//            pastTruss.setConstantHeadingInterpolation(Math.toRadians(180));
+//            pastTruss.setZeroPowerAccelerationMultiplier(5);
 
             // make path to backdrop
-//            Path toBackdrop = new Path(new BezierCurve(pastTruss,
-//                    cycle));
+//            Path toBackdrop = new Path(new BezierLine(
+//                    new Point(24, 9, Point.CARTESIAN),
+//                    new Point(47, 30, Point.CARTESIAN)
+//            ));
+
 //            toBackdrop.setReversed(true);
+//            toBackdrop.setConstantHeadingInterpolation(Math.toRadians(180));
 //            toBackdrop.setZeroPowerAccelerationMultiplier(5);
-//            toBackdrop.setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(200), 0.8);
+
+//            PathChain scoringPath = new PathChain(pastTruss, toBackdrop);
+            Path scoringPath = new Path(new BezierCurve(
+                    stackPoint,
+                    new Point(24, 9, Point.CARTESIAN),
+                    new Point(32, 9, Point.CARTESIAN),
+                    new Point(50, 30, Point.CARTESIAN)
+            ));
+            scoringPath.setReversed(true);
+            scoringPath.setConstantHeadingInterpolation(Math.toRadians(180));
+            scoringPath.setZeroPowerAccelerationMultiplier(5);
 
             // drive to backdrop, score pixels
             sched.addAction(new ParallelAction(
                     new SequentialAction(
                             new DrivePoseLoggingAction(follower, "stage_path_begin"),
-                            new FollowPathAction(follower, toBackstage),
+                            new FollowPathAction(follower, scoringPath),
                             new DrivePoseLoggingAction(follower, "stage_path_end"),
                             new DrivePoseLoggingAction(follower, "cycle_end")
                     ),
