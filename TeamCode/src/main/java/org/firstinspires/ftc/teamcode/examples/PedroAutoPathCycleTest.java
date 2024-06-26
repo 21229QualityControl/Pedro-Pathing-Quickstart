@@ -35,10 +35,14 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
     public static Pose2d backdrop = new Pose2d(48.5, -36.0, Math.PI);
     public static Pose2d spike = new Pose2d(28.5, -24.5, Math.PI);
     public static Pose2d parking = new Pose2d(52.0, -60.0, Math.PI);
+    int cycleCount = 0;
+    double y_position = 9;
 
     protected AutoActionScheduler sched;
     protected Outtake outtake;
     protected Intake intake;
+    protected Follower follower;
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -63,13 +67,11 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
 
         ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
-        Follower follower = new Follower(hardwareMap);
+        this.follower = new Follower(hardwareMap);
         follower.setStartingPose(new Pose2d(12, 62, Math.toRadians(-90)));
 
         Point backdrop = new Point(51.0,36.0, Point.CARTESIAN);
-//        Point pastTruss = new Point(21.0, 9.0, Point.CARTESIAN);
         Point cycle = new Point(47.0,30.0, Point.CARTESIAN);
-//        Point backstage = new Point(24.0, 30.0, Point.CARTESIAN);
 
         // make the scoring spike path
         // TODO: add randomization and vision code to this
@@ -97,10 +99,8 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
         Log.d("purplePoseY:", Double.toString(currentPose.position.y));
         // create yellow pixel path
         Path yellowPath = new Path(new BezierLine(new Point(currentPose), backdrop));
-//        yellowPath.setLinearHeadingInterpolation(currentPose.heading.toDouble(), Math.toRadians(180));
         yellowPath.setConstantHeadingInterpolation(Math.toRadians(180));
         yellowPath.setZeroPowerAccelerationMultiplier(5);
-        //yellowPath.setReversed(true);
 
         follower.update();
         sched.addAction(new ParallelAction(
@@ -116,129 +116,17 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
                 )
         ));
         sched.addAction(outtake.clawOpen());
-        sched.addAction(new SleepAction(0.5));
+        sched.addAction(new SleepAction(0.1));
         sched.run();
 
-        int cycleCount = 0;
+        intakeStack(true, false);
+        cycle(false);
 
-        double y_position = 9;
-        while(cycleCount++ < 3) {
+        intakeStack(false, false);
+        cycle(false);
 
-            Pose2d backdrop0 = follower.getPose();
-
-            if(cycleCount == 2) {
-//                y_position0 = 10;
-//                y_position = 10.5;
-                follower.setPose(new Pose2d(backdrop0.position.x, backdrop0.position.y,backdrop0.heading.toDouble()));
-            }
-            if(cycleCount == 3) {
-//                y_position0 = 10.5;
-//                y_position = 11.0;
-                follower.setPose(new Pose2d(backdrop0.position.x, backdrop0.position.y,backdrop0.heading.toDouble()));
-            }
-
-            Point stagePoint = new Point(backdrop0.position.x, backdrop0.position.y, Point.CARTESIAN);
-            // create path to go to stack
-            Path toStack = new Path(new BezierCurve(stagePoint,
-                    new Point(45, y_position, Point.CARTESIAN),
-                    new Point(24, y_position, Point.CARTESIAN),
-                    new Point(-24, y_position, Point.CARTESIAN),
-                    new Point(-59, 8.0, Point.CARTESIAN)));
-
-            toStack.setZeroPowerAccelerationMultiplier(5);
-            toStack.setConstantHeadingInterpolation(Math.PI);
-
-            Log.d("heading:", Double.toString(follower.getPose().heading.toDouble()));
-            // drive to stack, retract outtake, start intake
-            sched.addAction(new ParallelAction(
-                    new SequentialAction(
-                            new DrivePoseLoggingAction(follower, "stack_path_begin"),
-                            new FollowPathAction(follower, toStack),
-                            new DrivePoseLoggingAction(follower, "stack_path_end")
-                    ),
-                    new SequentialAction(
-                            new WaitPositionCommand(follower, 48, false, true), // Away from backdrop
-                            new SequentialAction(
-                                    outtake.wristVertical(),
-                                    outtake.armStored(),
-                                    outtake.retractOuttakeBlocking()
-                            ),
-                            new WaitPositionCommand(follower, 24, false, true), // intermediate
-                            new SequentialAction(
-//                                    intake.prepIntakeCount(first || nextStack, false),
-                                    intake.prepIntakeCount(cycleCount == 2 || cycleCount == 3 ? false : true, false),
-//                                    nextStack ? intake.intakeOn() : intake.intakeSlow(),
-                                    intake.intakeOn(),
-                                    outtake.extendOuttakeBarelyOut()
-                            )
-                    )
-            ));
-            sched.addAction(new SequentialAction(
-                    intake.intakeCount(false),
-                    outtake.retractOuttake()
-            ));
-            sched.run();
-            Log.d("heading:", Double.toString(follower.getPose().heading.toDouble()));
-
-            Pose2d stack0 = follower.getPose();
-            Point stackPoint = new Point(stack0.position.x, stack0.position.y, Point.CARTESIAN);
-            // make path past the truss
-//            Path pastTruss = new Path(new BezierLine(stackPoint,
-//                    new Point(24, 9, Point.CARTESIAN)
-//                   ));
-//
-//            pastTruss.setReversed(true);
-//            pastTruss.setConstantHeadingInterpolation(Math.toRadians(180));
-//            pastTruss.setZeroPowerAccelerationMultiplier(5);
-
-            // make path to backdrop
-//            Path toBackdrop = new Path(new BezierLine(
-//                    new Point(24, 9, Point.CARTESIAN),
-//                    new Point(47, 30, Point.CARTESIAN)
-//            ));
-
-//            toBackdrop.setReversed(true);
-//            toBackdrop.setConstantHeadingInterpolation(Math.toRadians(180));
-//            toBackdrop.setZeroPowerAccelerationMultiplier(5);
-
-//            PathChain scoringPath = new PathChain(pastTruss, toBackdrop);
-            Path scoringPath = new Path(new BezierCurve(
-                    stackPoint,
-                    new Point(24, 9, Point.CARTESIAN),
-                    new Point(32, 9, Point.CARTESIAN),
-                    new Point(50, 30, Point.CARTESIAN)
-            ));
-            scoringPath.setReversed(true);
-            scoringPath.setConstantHeadingInterpolation(Math.toRadians(180));
-            scoringPath.setZeroPowerAccelerationMultiplier(5);
-
-            // drive to backdrop, score pixels
-            sched.addAction(new ParallelAction(
-                    new SequentialAction(
-                            new DrivePoseLoggingAction(follower, "stage_path_begin"),
-                            new FollowPathAction(follower, scoringPath),
-                            new DrivePoseLoggingAction(follower, "stage_path_end"),
-                            new DrivePoseLoggingAction(follower, "cycle_end")
-                    ),
-                    new SequentialAction(
-                            new WaitPositionCommand(follower, -36, true, true), // pastTruss
-                            new SequentialAction(
-                                    intake.pixelCount() == 1 ? outtake.clawSingleClosed() : outtake.clawClosed(),
-                                    intake.intakeOff()
-                            ),
-                            new WaitPositionCommand(follower, 21, true, true), // intermediate
-                            new SequentialAction(
-//                                    second ? outtake.extendOuttakeCycleHighBlocking() : outtake.extendOuttakeCycleBlocking(),
-                                    outtake.extendOuttakeCycleBlocking(),
-                                    outtake.armScoring(),
-                                    intake.feedOpen()
-                            )
-                    )
-            ));
-            sched.addAction(outtake.clawOpen());
-            sched.addAction(intake.feedClosed()); // Open & close feed in case outtake doesn't grab
-            sched.run();
-        }
+        intakeStack(false, true);
+        cycle(true);
 
         boolean firstTime = true;
         Pose2d endPose = follower.getPose();
@@ -265,5 +153,139 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
         outtake.update();
 
         telemetry.addData("Time left", 30 - getRuntime());
+    }
+
+    private void intakeStack(boolean first, boolean nextStack) {
+        Pose2d backdrop0 = follower.getPose();
+
+        Point stagePoint = new Point(backdrop0.position.x, backdrop0.position.y, Point.CARTESIAN);
+
+        // create path to go to stack
+        Path toStack = null;
+        Path toNextStack = null;
+        Path pastTruss = null;
+
+        if (nextStack) {
+            Log.d("nextStack", "Next Stack Path");
+
+            pastTruss = new Path(new BezierCurve(stagePoint,
+                    new Point(45, y_position, Point.CARTESIAN),
+                    new Point(-24, y_position, Point.CARTESIAN)
+            ));
+
+            toNextStack = new Path(new BezierCurve(
+                    new Point(-24, y_position, Point.CARTESIAN),
+                    new Point(-50, y_position, Point.CARTESIAN),
+                    new Point(-59, 13, Point.CARTESIAN)
+            ));
+
+
+//            toStack = new Path(new BezierCurve(stagePoint,
+//                    new Point(45, y_position, Point.CARTESIAN),
+//                    new Point(24, y_position, Point.CARTESIAN),
+//                    new Point(-59, y_position, Point.CARTESIAN),
+//                    new Point(-59, 22, Point.CARTESIAN)));
+        }
+        else {
+            toStack = new Path(new BezierCurve(stagePoint,
+                    new Point(45, y_position, Point.CARTESIAN),
+                    new Point(24, y_position, Point.CARTESIAN),
+                    new Point(-24, y_position, Point.CARTESIAN),
+                    new Point(-59, 8.0, Point.CARTESIAN)));
+        }
+
+//        toSecondStack.setZeroPowerAccelerationMultiplier(4);
+
+        Log.d("heading:", Double.toString(follower.getPose().heading.toDouble()));
+        // drive to stack, retract outtake, start intake
+        SequentialAction stackAction = null;
+        if (nextStack) {
+            pastTruss.setZeroPowerAccelerationMultiplier(4);
+            pastTruss.setConstantHeadingInterpolation(Math.PI);
+            toNextStack.setZeroPowerAccelerationMultiplier(4);
+            toNextStack.setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(150), 0.8);
+
+            stackAction = new SequentialAction(
+                    new DrivePoseLoggingAction(follower, "stack_path_begin"),
+                    new FollowPathAction(follower, pastTruss),
+                    new FollowPathAction(follower, toNextStack),
+                    new DrivePoseLoggingAction(follower, "stack_path_end")
+            );
+        }
+        else {
+            toStack.setZeroPowerAccelerationMultiplier(4);
+            toStack.setConstantHeadingInterpolation(Math.PI);
+            stackAction = new SequentialAction(
+                    new DrivePoseLoggingAction(follower, "stack_path_begin"),
+                    new FollowPathAction(follower, toStack),
+                    new DrivePoseLoggingAction(follower, "stack_path_end")
+            );
+        }
+        sched.addAction(new ParallelAction(
+                stackAction,
+                new SequentialAction(
+                        new WaitPositionCommand(follower, 48, false, true), // Away from backdrop
+                        new SequentialAction(
+                                outtake.wristVertical(),
+                                new SleepAction(0.25),
+                                outtake.armStored(),
+                                outtake.retractOuttakeBlocking()
+                        ),
+                        new WaitPositionCommand(follower, 24, false, true), // intermediate
+                        new SequentialAction(
+                                intake.prepIntakeCount(first || nextStack, false),
+                                nextStack ? intake.intakeOn() : intake.intakeSlow(),
+                                outtake.extendOuttakeBarelyOut()
+                        )
+                )
+        ));
+        sched.addAction(new SequentialAction(
+                intake.intakeCount(false),
+                outtake.retractOuttake()
+        ));
+        sched.run();
+        Log.d("heading:", Double.toString(follower.getPose().heading.toDouble()));
+    }
+
+    private void cycle(boolean second) {
+        Pose2d stack0 = follower.getPose();
+        Point stackPoint = new Point(stack0.position.x, stack0.position.y, Point.CARTESIAN);
+        // create path to get to backdrop
+        Path scoringPath = new Path(new BezierCurve(
+                stackPoint,
+                new Point(-50, 8, Point.CARTESIAN),
+                new Point(24, 9, Point.CARTESIAN),
+                new Point(32, 9, Point.CARTESIAN),
+                new Point(48, 30, Point.CARTESIAN)
+        ));
+        scoringPath.setReversed(true);
+        scoringPath.setConstantHeadingInterpolation(Math.toRadians(180));
+        scoringPath.setZeroPowerAccelerationMultiplier(5);
+
+        // drive to backdrop, score pixels
+        sched.addAction(new ParallelAction(
+                new SequentialAction(
+                        new DrivePoseLoggingAction(follower, "stage_path_begin"),
+                        new FollowPathAction(follower, scoringPath),
+                        new DrivePoseLoggingAction(follower, "stage_path_end"),
+                        new DrivePoseLoggingAction(follower, "cycle_end")
+                ),
+                new SequentialAction(
+                        new WaitPositionCommand(follower, -36, true, true), // pastTruss
+                        new SequentialAction(
+                                intake.pixelCount() == 1 ? outtake.clawSingleClosed() : outtake.clawClosed(),
+                                intake.intakeOff()
+                        ),
+                        new WaitPositionCommand(follower, 21, true, true), // intermediate
+                        new SequentialAction(
+                                second ? outtake.extendOuttakeCycleHighBlocking() : outtake.extendOuttakeCycleBlocking(),
+                                outtake.armScoring(),
+                                intake.feedOpen()
+                        )
+                )
+        ));
+        sched.addAction(outtake.clawOpen());
+        sched.addAction(intake.feedClosed()); // Open & close feed in case outtake doesn't grab
+        sched.run();
     }
 }
