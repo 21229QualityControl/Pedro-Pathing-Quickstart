@@ -221,8 +221,8 @@ public class Intake {
       private boolean jammed;
 
       public IntakeCountAction(boolean fast) {
-         this.waitUntil = System.currentTimeMillis() + 300;
-         this.finalTime = System.currentTimeMillis() + (fast ? 3000 : 6000);
+         this.waitUntil = System.currentTimeMillis() + 75; // used to be 300
+         this.finalTime = System.currentTimeMillis() + (fast ? 3000 : 5000);
       }
 
       @Override

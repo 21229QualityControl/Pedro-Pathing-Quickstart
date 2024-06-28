@@ -70,14 +70,14 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
         this.follower = new Follower(hardwareMap);
         follower.setStartingPose(new Pose2d(12, 62, Math.toRadians(-90)));
 
-        Point backdrop = new Point(51.0,40.0, Point.CARTESIAN);
+        Point backdrop = new Point(51.5,38.0, Point.CARTESIAN);
         Point cycle = new Point(47.0,30.0, Point.CARTESIAN);
 
         // make the scoring spike path
         // TODO: add randomization and vision code to this
         Path purplePath = new Path(
                 new BezierCurve(new Point(12, 62.0, Point.CARTESIAN),
-                        new Point(32.0, 28.0, Point.CARTESIAN)));
+                        new Point(32.0, 35.0, Point.CARTESIAN)));
 
         purplePath.setLinearHeadingInterpolation(Math.toRadians(-90), Math.toRadians(180), 0.8);
         purplePath.setZeroPowerAccelerationMultiplier(4);
@@ -126,7 +126,7 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
         cycle(false, false);
 
         intakeStack(false, true, false);
-        cycle(true, true);
+        cycle(false, true);
 
         intakeStack(false, true, true);
         cycle(true, true);
@@ -187,7 +187,7 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
                     new Point(45, y_position, Point.CARTESIAN),
                     new Point(24, y_position, Point.CARTESIAN),
                     new Point(-24, y_position, Point.CARTESIAN),
-                    new Point(-59, 8.0, Point.CARTESIAN)));
+                    new Point(-60, 8.0, Point.CARTESIAN)));
         }
 
         Log.d("heading:", Double.toString(follower.getPose().heading.toDouble()));
@@ -228,7 +228,6 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
                         new WaitPositionCommand(follower, 48, false, true), // Away from backdrop
                         new SequentialAction(
                                 outtake.wristVertical(),
-                                new SleepAction(0.25),
                                 outtake.armStored(),
                                 outtake.retractOuttakeBlocking()
                         ),
@@ -257,7 +256,7 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
         SequentialAction scoringAction = null;
         if (nextStack) {
             Path toTruss = new Path(new BezierCurve(stackPoint,
-                    new Point(-48, 11, Point.CARTESIAN)
+                    new Point(-48, 13, Point.CARTESIAN)
             ));
 
             toTruss.setZeroPowerAccelerationMultiplier(4);
@@ -266,7 +265,8 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
 
             Path toBackstage = new Path(new BezierCurve(
                     new Point(-48, y_position, Point.CARTESIAN),
-                    new Point(45, y_position, Point.CARTESIAN),
+                    new Point(40, y_position, Point.CARTESIAN),
+                    new Point(40, 28, Point.CARTESIAN),
                     new Point(46, 28, Point.CARTESIAN)
             ));
 
@@ -302,10 +302,10 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
                                 intake.pixelCount() == 1 ? outtake.clawSingleClosed() : outtake.clawClosed(),
                                 intake.intakeOff()
                         ),
-                        new WaitPositionCommand(follower, 16, true, true), // intermediate
+                        new WaitPositionCommand(follower, 8, true, true), // intermediate
                         new SequentialAction(
-//                                second ? outtake.extendOuttakeCycleHighBlocking() : outtake.extendOuttakeCycleBlocking(),
-                                outtake.extendOuttakeCycleBlocking(),
+                                second ? outtake.extendOuttakeCycleHighBlocking() : outtake.extendOuttakeCycleBlocking(),
+//                                outtake.extendOuttakeCycleBlocking(),
                                 outtake.armScoring(),
                                 intake.feedOpen()
                         )
