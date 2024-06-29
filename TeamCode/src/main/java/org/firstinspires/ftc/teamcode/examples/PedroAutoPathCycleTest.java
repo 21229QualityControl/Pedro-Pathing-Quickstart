@@ -31,12 +31,22 @@ import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathChain;
 @Config
 @Autonomous(name = "Blue Pedro Cycle Test",group = "Test")
 public final class PedroAutoPathCycleTest extends LinearOpMode {
-    public static Pose2d starting = new Pose2d(14.5, -62.0, Math.PI/2);
-    public static Pose2d backdrop = new Pose2d(48.5, -36.0, Math.PI);
-    public static Pose2d spike = new Pose2d(28.5, -24.5, Math.PI);
-    public static Pose2d parking = new Pose2d(52.0, -60.0, Math.PI);
-    int cycleCount = 0;
-    double y_position = 9;
+    public static double y_position = 9;
+    public static Point[] backdrop = {
+            new Point(51.5, 28, Point.CARTESIAN),
+            new Point(51.5, 34.5, Point.CARTESIAN),
+            new Point(51.5,38.0, Point.CARTESIAN)
+    };
+    public static Point scoring = new Point(47, 28, Point.CARTESIAN);
+    public static Point scoringHigh = new Point(46, 28, Point.CARTESIAN);
+    public static Point start = new Point(12, 62, Point.CARTESIAN);
+    public static Point[] spike = {
+            new Point(9, 35, Point.CARTESIAN),
+            new Point(28, 22, Point.CARTESIAN),
+            new Point(32, 35, Point.CARTESIAN)
+    };
+    public static Point stack = new Point(-60, 8, Point.CARTESIAN);
+    public static Point secondStack = new Point(-58.5, 15, Point.CARTESIAN);
 
     protected AutoActionScheduler sched;
     protected Outtake outtake;
@@ -68,16 +78,13 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
         ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
         this.follower = new Follower(hardwareMap);
-        follower.setStartingPose(new Pose2d(12, 62, Math.toRadians(-90)));
-
-        Point backdrop = new Point(51.5,38.0, Point.CARTESIAN);
-        Point cycle = new Point(47.0,30.0, Point.CARTESIAN);
+        follower.setStartingPose(new Pose2d(start.getX(), start.getY(), Math.toRadians(-90)));
 
         // make the scoring spike path
         // TODO: add randomization and vision code to this
         Path purplePath = new Path(
-                new BezierCurve(new Point(12, 62.0, Point.CARTESIAN),
-                        new Point(32.0, 35.0, Point.CARTESIAN)));
+                new BezierCurve(new Point(start.getX(), start.getY(), Point.CARTESIAN),
+                        spike[2]));
 
         purplePath.setLinearHeadingInterpolation(Math.toRadians(-90), Math.toRadians(180), 0.8);
         purplePath.setZeroPowerAccelerationMultiplier(4);
@@ -94,11 +101,10 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
         sched.run();
 
         Pose2d currentPose = follower.getPose();
-        //follower.setStartingPose(currentPose);
         Log.d("purplePoseX:", Double.toString(currentPose.position.x));
         Log.d("purplePoseY:", Double.toString(currentPose.position.y));
         // create yellow pixel path
-        Path yellowPath = new Path(new BezierLine(new Point(currentPose), backdrop));
+        Path yellowPath = new Path(new BezierLine(new Point(currentPose), backdrop[2]));
         yellowPath.setConstantHeadingInterpolation(Math.toRadians(180));
         yellowPath.setZeroPowerAccelerationMultiplier(5);
 
@@ -159,10 +165,8 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
     }
 
     private void intakeStack(boolean first, boolean nextStack, boolean lastCycle) {
-        Pose2d backdrop0 = follower.getPose();
 
-        Point stagePoint = new Point(backdrop0.position.x, backdrop0.position.y, Point.CARTESIAN);
-
+        Point stagePoint = new Point(follower.getPose().position.x, follower.getPose().position.y, Point.CARTESIAN);
         // create path to go to stack
         Path toStack = null;
         Path toNextStack = null;
@@ -179,7 +183,7 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
             toNextStack = new Path(new BezierCurve(
                     new Point(-24, y_position, Point.CARTESIAN),
                     new Point(-50, y_position, Point.CARTESIAN),
-                    new Point(-58.5, 15, Point.CARTESIAN)
+                    secondStack
             ));
         }
         else {
@@ -187,12 +191,12 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
                     new Point(45, y_position, Point.CARTESIAN),
                     new Point(24, y_position, Point.CARTESIAN),
                     new Point(-24, y_position, Point.CARTESIAN),
-                    new Point(-60, 8.0, Point.CARTESIAN)));
+                    stack));
         }
 
         Log.d("heading:", Double.toString(follower.getPose().heading.toDouble()));
         // drive to stack, retract outtake, start intake
-        SequentialAction stackAction = null;
+        SequentialAction stackAction;
         if (nextStack) {
             Log.d("num intaked:", Double.toString(intake.numIntaked));
             if (lastCycle) {
@@ -233,7 +237,7 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
                         ),
                         new WaitPositionCommand(follower, 24, false, true), // intermediate
                         new SequentialAction(
-                                // the intake will only start from the top of that stack at the
+                                // the intake will only start from the top of that stack during the
                                 // very first cycle and the first cycle of the next stack.
                                 intake.prepIntakeCount(first || (nextStack && !lastCycle), false),
                                 intake.intakeSlow(), // this actually makes the intake go full speed
@@ -250,10 +254,9 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
     }
 
     private void cycle(boolean second, boolean nextStack) {
-        Pose2d stack0 = follower.getPose();
-        Point stackPoint = new Point(stack0.position.x, stack0.position.y, Point.CARTESIAN);
+        Point stackPoint = new Point(follower.getPose().position.x, follower.getPose().position.y, Point.CARTESIAN);
         // create path to get to backdrop
-        SequentialAction scoringAction = null;
+        SequentialAction scoringAction;
         if (nextStack) {
             Path toTruss = new Path(new BezierCurve(stackPoint,
                     new Point(-48, 13, Point.CARTESIAN)
@@ -267,7 +270,7 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
                     new Point(-48, y_position, Point.CARTESIAN),
                     new Point(40, y_position, Point.CARTESIAN),
                     new Point(40, 28, Point.CARTESIAN),
-                    new Point(46, 28, Point.CARTESIAN)
+                    scoringHigh
             ));
 
             toBackstage.setZeroPowerAccelerationMultiplier(4);
@@ -283,7 +286,7 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
                     new Point(-50, 8, Point.CARTESIAN),
                     new Point(24, 9, Point.CARTESIAN),
                     new Point(32, 9, Point.CARTESIAN),
-                    new Point(47, 28, Point.CARTESIAN)
+                    scoring
             ));
             scoringPath.setReversed(true);
             scoringPath.setConstantHeadingInterpolation(Math.toRadians(180));
@@ -291,7 +294,6 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
 
             scoringAction = new SequentialAction(new FollowPathAction(follower, scoringPath));
         }
-
 
         // drive to backdrop, score pixels
         sched.addAction(new ParallelAction(
@@ -305,7 +307,6 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
                         new WaitPositionCommand(follower, 8, true, true), // intermediate
                         new SequentialAction(
                                 second ? outtake.extendOuttakeCycleHighBlocking() : outtake.extendOuttakeCycleBlocking(),
-//                                outtake.extendOuttakeCycleBlocking(),
                                 outtake.armScoring(),
                                 intake.feedOpen()
                         )
