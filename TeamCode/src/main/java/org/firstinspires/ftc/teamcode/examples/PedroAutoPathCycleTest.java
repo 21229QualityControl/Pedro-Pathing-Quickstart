@@ -2,35 +2,26 @@ package org.firstinspires.ftc.teamcode.examples;
 
 import android.util.Log;
 
-import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.SleepAction;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.follower.FollowPathAction;
-import org.firstinspires.ftc.teamcode.pedroPathing.follower.Follower;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierCurve;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierLine;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Path;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Point;
-import org.firstinspires.ftc.teamcode.pedroPathing.util.AutoActionScheduler;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.DrivePoseLoggingAction;
-import org.firstinspires.ftc.teamcode.pedroPathing.util.PoseMessage;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.WaitPositionCommand;
-import org.firstinspires.ftc.teamcode.subsystems.Intake;
-import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathChain;
 
 
 @Config
 @Autonomous(name = "Blue Pedro Cycle Test",group = "Test")
-public final class PedroAutoPathCycleTest extends LinearOpMode {
+public final class PedroAutoPathCycleTest extends AutoBase {
     public static double y_position = 9;
     public static Point[] backdrop = {
             new Point(51.5, 28, Point.CARTESIAN),
@@ -48,43 +39,47 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
     public static Point stack = new Point(-60, 8, Point.CARTESIAN);
     public static Point secondStack = new Point(-58.5, 15, Point.CARTESIAN);
 
-    protected AutoActionScheduler sched;
-    protected Outtake outtake;
-    protected Intake intake;
-    protected Follower follower;
-
+    @Override
+    protected Pose2d getStartPose() {
+        return new Pose2d(start.getX(), start.getY(), Math.toRadians(-90));
+    }
 
     @Override
-    public void runOpMode() throws InterruptedException {
-        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+    protected void printDescription() {
+        telemetry.addData("Description", "Blue Left Auto 2+6");
+    }
 
-        sched = new AutoActionScheduler(this::update, hardwareMap);
-
-        this.outtake = new Outtake(hardwareMap);
-        this.intake = new Intake(hardwareMap);
-        outtake.initialize(false);
-        intake.initialize();
-        outtake.prepInitializeSlides();
+    @Override
+    protected void onInit() {
         sched.addAction(outtake.clawSingleClosed());
         sched.run();
+    }
 
-        while(!isStarted() && !isStopRequested()) {
-            outtake.update();
-            intake.update();
-            telemetry.addLine("Ready to start!! Blue Auto Pedro Pathing Test ...");
-            telemetry.update();
-        }
+    @Override
+    protected void onRun() {
+        scorePreload();
 
-        ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+        intakeStack(true, false, false);
+        cycle(false, false);
 
-        this.follower = new Follower(hardwareMap);
+        intakeStack(false, false, false);
+        cycle(false, false);
+
+        intakeStack(false, true, false);
+        cycle(false, true);
+
+        intakeStack(false, true, true);
+        cycle(true, true);
+    }
+
+    private void scorePreload(){
         follower.setStartingPose(new Pose2d(start.getX(), start.getY(), Math.toRadians(-90)));
 
         // make the scoring spike path
         // TODO: add randomization and vision code to this
         Path purplePath = new Path(
                 new BezierCurve(new Point(start.getX(), start.getY(), Point.CARTESIAN),
-                        spike[2]));
+                        spike[SPIKE]));
 
         purplePath.setLinearHeadingInterpolation(Math.toRadians(-90), Math.toRadians(180), 0.8);
         purplePath.setZeroPowerAccelerationMultiplier(4);
@@ -104,7 +99,7 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
         Log.d("purplePoseX:", Double.toString(currentPose.position.x));
         Log.d("purplePoseY:", Double.toString(currentPose.position.y));
         // create yellow pixel path
-        Path yellowPath = new Path(new BezierLine(new Point(currentPose), backdrop[2]));
+        Path yellowPath = new Path(new BezierLine(new Point(currentPose), backdrop[SPIKE]));
         yellowPath.setConstantHeadingInterpolation(Math.toRadians(180));
         yellowPath.setZeroPowerAccelerationMultiplier(5);
 
@@ -114,54 +109,16 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
                         new DrivePoseLoggingAction(follower, "yellow_path_begin"),
                         new FollowPathAction(follower, yellowPath),
                         new DrivePoseLoggingAction(follower, "yellow_path_end"
-                )),
+                        )),
                 new SequentialAction(
-                    outtake.extendOuttakeCloseBlocking(),
-                    outtake.armScoring(),
-                    outtake.wristVerticalFlip()
+                        outtake.extendOuttakeCloseBlocking(),
+                        outtake.armScoring(),
+                        outtake.wristVerticalFlip()
                 )
         ));
         sched.addAction(outtake.clawOpen());
         sched.addAction(new SleepAction(0.1));
         sched.run();
-
-        intakeStack(true, false, false);
-        cycle(false, false);
-
-        intakeStack(false, false, false);
-        cycle(false, false);
-
-        intakeStack(false, true, false);
-        cycle(false, true);
-
-        intakeStack(false, true, true);
-        cycle(true, true);
-
-        boolean firstTime = true;
-        Pose2d endPose = follower.getPose();
-        while(!isStopRequested() ) {
-            if(sched.isEmpty()) {
-                if(firstTime) {
-                    follower.update();
-                    endPose = follower.getPose();
-                    firstTime = false;
-                    Log.d("Drive_logger", "End drive pose: " + new PoseMessage(endPose));
-                    Log.d("Drive_logger","Auto elapsed time (ms): " + String.format("%3.3f",timer.milliseconds()));
-                }
-
-                telemetry.addData("Auto elapsed time (ms): ", String.format("%3.3f",timer.milliseconds()));
-                telemetry.addData("End Pose: ", new PoseMessage(endPose).toString());
-                telemetry.update();
-            }
-            idle();
-        }
-    }
-
-    final public void update() {
-        intake.update();
-        outtake.update();
-
-        telemetry.addData("Time left", 30 - getRuntime());
     }
 
     private void intakeStack(boolean first, boolean nextStack, boolean lastCycle) {
@@ -232,6 +189,7 @@ public final class PedroAutoPathCycleTest extends LinearOpMode {
                         new WaitPositionCommand(follower, 48, false, true), // Away from backdrop
                         new SequentialAction(
                                 outtake.wristVertical(),
+                                new SleepAction(0.25),
                                 outtake.armStored(),
                                 outtake.retractOuttakeBlocking()
                         ),
