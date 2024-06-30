@@ -122,8 +122,8 @@ public final class PedroAutoPathCycleTest extends AutoBase {
     }
 
     private void intakeStack(boolean first, boolean nextStack, boolean lastCycle) {
-
-        Point stagePoint = new Point(follower.getPose().position.x, follower.getPose().position.y, Point.CARTESIAN);
+        Pose2d currentPose = follower.getPose();
+        Point stagePoint = new Point(currentPose.position.x, currentPose.position.y, Point.CARTESIAN);
         // create path to go to stack
         Path toStack = null;
         Path toNextStack = null;
@@ -212,7 +212,8 @@ public final class PedroAutoPathCycleTest extends AutoBase {
     }
 
     private void cycle(boolean second, boolean nextStack) {
-        Point stackPoint = new Point(follower.getPose().position.x, follower.getPose().position.y, Point.CARTESIAN);
+        Pose2d currentPose = follower.getPose();
+        Point stackPoint = new Point(currentPose.position.x, currentPose.position.y, Point.CARTESIAN);
         // create path to get to backdrop
         SequentialAction scoringAction;
         if (nextStack) {
