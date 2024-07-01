@@ -234,7 +234,7 @@ public final class PedroAutoPathCycleTest extends AutoBase {
 
             toBackstage.setZeroPowerAccelerationMultiplier(4);
             toBackstage.setReversed(true);
-            toBackstage.setConstantHeadingInterpolation(Math.toRadians(180));
+            toBackstage.setLinearHeadingInterpolation(Math.toRadians(150), Math.toRadians(180), 0.05);
 
             PathChain scoringPath = follower.pathBuilder().addPath(toTruss).addPath(toBackstage).build();
 
