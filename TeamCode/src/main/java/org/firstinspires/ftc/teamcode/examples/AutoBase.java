@@ -130,7 +130,7 @@ public abstract class AutoBase extends LinearOpMode {
         telemetry.update();
         outtake.prepInitializeSlides();
         sleep(200);
-        while (opModeInInit() && outtake.initializeSlides()) {}
+//        while (opModeInInit() && outtake.initializeSlides()) {}
 
         telemetry.addLine("Initializing cameras");
         telemetry.update();
