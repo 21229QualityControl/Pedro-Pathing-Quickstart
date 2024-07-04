@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.examples;
+package org.firstinspires.ftc.teamcode.opmode.auto;
 
 import android.util.Log;
 
@@ -9,6 +9,7 @@ import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.SleepAction;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
+import org.firstinspires.ftc.teamcode.examples.AutoBase;
 import org.firstinspires.ftc.teamcode.pedroPathing.follower.FollowPathAction;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierCurve;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierLine;
@@ -20,8 +21,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.PathChain;
 
 
 @Config
-@Autonomous(name = "Blue Pedro Cycle Test",group = "Test")
-public final class PedroAutoPathCycleTest extends AutoBase {
+@Autonomous(name = "Blue Pedro 2+8",group = "Test")
+public final class BlueLeft2_8 extends AutoBase {
     public static double y_position = 9;
     public static Point[] backdrop = {
             new Point(51.5, 28, Point.CARTESIAN),
@@ -76,7 +77,7 @@ public final class PedroAutoPathCycleTest extends AutoBase {
         follower.setStartingPose(new Pose2d(start.getX(), start.getY(), Math.toRadians(-90)));
 
         // make the scoring spike path
-        // TODO: add randomization and vision code to this
+        // TODO: Make this work for spike positions under the truss
         Path purplePath = new Path(
                 new BezierCurve(new Point(start.getX(), start.getY(), Point.CARTESIAN),
                         spike[SPIKE]));
