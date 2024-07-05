@@ -5,6 +5,7 @@ import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.SleepAction;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.teamcode.examples.AutoBase;
@@ -21,21 +22,21 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.WaitPositionCommand;
 public class BlueRight2_7 extends AutoBase {
     public static Point start = new Point(-36, 62, Point.CARTESIAN);
     public static Point[] backdrop = {
-            new Point(51.5, 28, Point.CARTESIAN),
+            new Point(48, 30, Point.CARTESIAN),
             new Point(51.5, 34.5, Point.CARTESIAN),
             new Point(51.5,38.0, Point.CARTESIAN)
     };
     public static Point scoring = new Point(48, 40, Point.CARTESIAN);
     public static Point scoringHigh = new Point(47, 40, Point.CARTESIAN);
     public static Point[] spike = {
-            new Point(-48, 30, Point.CARTESIAN),
+            new Point(-48, 39, Point.CARTESIAN),
             new Point(28, 22, Point.CARTESIAN), // the last 2 positions aren't accurate
             new Point(32, 35, Point.CARTESIAN)
     };
     public static Point spikeBackedOut = new Point(-48, 50, Point.CARTESIAN);
-    public static Point intermediate = new Point(-36, 60, Point.CARTESIAN);
-    public static Point pastTruss = new Point(30, 60, Point.CARTESIAN);
-    public static Point stack = new Point(-58.5, 37, Point.CARTESIAN);
+    public static Point intermediate = new Point(-36, 58, Point.CARTESIAN);
+    public static Point pastTruss = new Point(30, 58, Point.CARTESIAN);
+    public static Point stack = new Point(-56.5, 37, Point.CARTESIAN);
     public static Point secondStack = new Point(-58.5, 15, Point.CARTESIAN);
 
     @Override
@@ -56,8 +57,8 @@ public class BlueRight2_7 extends AutoBase {
         intakeStack(false, false, false);
         cycle(false, true);
 
-        intakeStack(false, true, true);
-        cycle(true, true);
+//        intakeStack(false, true, true);
+//        cycle(true, true);
     }
 
     private void firstCycle() {
@@ -68,7 +69,7 @@ public class BlueRight2_7 extends AutoBase {
         Path toStack = new Path(new BezierLine(
                 new Point(currentPose.position.x, currentPose.position.y, Point.CARTESIAN),
                 stack));
-        toStack.setZeroPowerAccelerationMultiplier(4);
+        toStack.setZeroPowerAccelerationMultiplier(2);
         toStack.setLinearHeadingInterpolation(Math.toRadians(-90), Math.toRadians(205), 0.8);
 
         sched.addAction(new ParallelAction(
@@ -88,17 +89,18 @@ public class BlueRight2_7 extends AutoBase {
                 intermediate));
         toTruss.setZeroPowerAccelerationMultiplier(4);
         toTruss.setReversed(true);
-        toTruss.setConstantHeadingInterpolation(Math.toRadians(205));
+        toTruss.setLinearHeadingInterpolation(Math.toRadians(205), Math.toRadians(180), 0.9);
 
         Path toBackstage = new Path(new BezierCurve(
                 intermediate,
+                new Point(20, 58, Point.CARTESIAN),
                 pastTruss,
                 new Point(40, 40, Point.CARTESIAN),
-                scoring
+                backdrop[SPIKE]
         ));
         toBackstage.setZeroPowerAccelerationMultiplier(4);
         toBackstage.setReversed(true);
-        toBackstage.setLinearHeadingInterpolation(Math.toRadians(205), Math.toRadians(180), 0.05);
+        toBackstage.setConstantHeadingInterpolation(Math.toRadians(180));
 
         PathChain scoringPath = follower.pathBuilder().addPath(toTruss).addPath(toBackstage).build();
 
@@ -156,11 +158,12 @@ public class BlueRight2_7 extends AutoBase {
 
         Path thruTruss = new Path(new BezierCurve(
                 new Point(currentPose.position.x, currentPose.position.y, Point.CARTESIAN),
+                new Point(40, 58, Point.CARTESIAN),
                 pastTruss,
                 intermediate
         ));
 
-        thruTruss.setZeroPowerAccelerationMultiplier(4);
+        thruTruss.setZeroPowerAccelerationMultiplier(5);
         thruTruss.setConstantHeadingInterpolation(Math.toRadians(180));
 
         Path toStack = new Path(new BezierLine(
@@ -168,7 +171,7 @@ public class BlueRight2_7 extends AutoBase {
                 stack
         ));
 
-        toStack.setZeroPowerAccelerationMultiplier(4);
+        toStack.setZeroPowerAccelerationMultiplier(2);
         toStack.setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(205), 0.8);
 
         PathChain intakePath = follower.pathBuilder().addPath(thruTruss).addPath(toStack).build();
@@ -187,12 +190,20 @@ public class BlueRight2_7 extends AutoBase {
                         new WaitPositionCommand(follower, -36, false, true), // intermediate
                         intake.prepIntakeCount(false, false)
                 ),
-                new FollowPathAction(follower, intakePath)
+//                new FollowPathAction(follower, intakePath)
+                new SequentialAction(
+                        new FollowPathAction(follower, thruTruss),
+                        new FollowPathAction(follower, toStack)
+                )
         ));
         sched.run();
 
         sched.addAction(intake.intakeCount(true));
         sched.run();
+
+        if (intake.pixelCount() < 2) {
+            tryAgain();
+        }
     }
 
     private void cycle(boolean second, boolean lastCycle) {
@@ -203,17 +214,18 @@ public class BlueRight2_7 extends AutoBase {
                 intermediate));
         toTruss.setZeroPowerAccelerationMultiplier(4);
         toTruss.setReversed(true);
-        toTruss.setConstantHeadingInterpolation(Math.toRadians(205));
+        toTruss.setLinearHeadingInterpolation(Math.toRadians(205), Math.toRadians(180), 0.8);
 
         Path toBackstage = new Path(new BezierCurve(
                 intermediate,
+                new Point(20, 58, Point.CARTESIAN),
                 pastTruss,
                 new Point(40, 40, Point.CARTESIAN),
                 scoring
         ));
         toBackstage.setZeroPowerAccelerationMultiplier(4);
         toBackstage.setReversed(true);
-        toBackstage.setLinearHeadingInterpolation(Math.toRadians(205), Math.toRadians(180), 0.05);
+        toBackstage.setConstantHeadingInterpolation(Math.toRadians(180));
 
         PathChain scoringPath = follower.pathBuilder().addPath(toTruss).addPath(toBackstage).build();
 
@@ -224,7 +236,7 @@ public class BlueRight2_7 extends AutoBase {
                         intake.pixelCount() == 2 ? outtake.clawClosed() : outtake.clawSingleClosed(),
                         new WaitPositionCommand(follower, 30, true, true),
                         intake.intakeOff(),
-                        outtake.extendOuttakePartnerBlocking(),
+                        outtake.extendOuttakeCycleBlocking(),
                         outtake.armScoring(),
                         outtake.wristVerticalFlip(),
                         intake.feedOpen()
@@ -232,6 +244,21 @@ public class BlueRight2_7 extends AutoBase {
         ));
         sched.addAction(outtake.clawOpen());
         sched.addAction(intake.feedClosed());
+        sched.run();
+    }
+
+    private void tryAgain() {
+        Pose2d currentPose = follower.getPose();
+        Path tryAgain = new Path(new BezierCurve(
+                new Point(currentPose.position.x, currentPose.position.y, Point.CARTESIAN),
+                new Point(currentPose.position.x, currentPose.position.y - 6, Point.CARTESIAN)
+                ));
+        sched.addAction(new SequentialAction(
+                intake.intakeReverse(),
+                new FollowPathAction(follower, tryAgain),
+                intake.prepIntakeCount(false, false)
+        ));
+        sched.addAction(intake.intakeCount(true));
         sched.run();
     }
 }

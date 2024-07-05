@@ -42,25 +42,25 @@ public class Intake {
    final DistanceSensor distanceLeft;
    final DistanceSensor distanceRight;
 
-   public static double WRIST_LEFT_STORED = 0.17;
-   public static double WRIST_LEFT_DOWN = 0.43;
-   public static double WRIST_LEFT_PRELOAD = 0.45;
+   public static double WRIST_LEFT_STORED = 0.96; //0.19
+   public static double WRIST_LEFT_DOWN = 0.73;
+   public static double WRIST_LEFT_PRELOAD = 0.71;
    public static double[] WRIST_LEFT_STACK_POSITIONS = {
-           0.34, // Getting 1
-           0.36, // Getting 2
-           0.37, // Getting 3
-           0.40, // Getting 4
+           0.80, // Getting 1 (0.34)
+           0.78, // Getting 2 (0.36)
+           0.77, // Getting 3 (0.37)
+           0.74, // Getting 4 (0.40)
            WRIST_LEFT_DOWN,
    };
 
-   public static double WRIST_RIGHT_STORED = 0.34;
-   public static double WRIST_RIGHT_DOWN = 0.1;
-   public static double WRIST_RIGHT_PRELOAD = 0.07;
+   public static double WRIST_RIGHT_STORED = 0.96; //0.19
+   public static double WRIST_RIGHT_DOWN = 0.73;
+   public static double WRIST_RIGHT_PRELOAD = 0.71;
    public static double[] WRIST_RIGHT_STACK_POSITIONS = {
-           0.18, // Getting 1
-           0.16, // Getting 2
-           0.14, // Getting 3
-           0.12, // Getting 4
+           0.80, // Getting 1 (0.34)
+           0.78, // Getting 2 (0.36)
+           0.77, // Getting 3 (0.37)
+           0.74, // Getting 4 (0.40)
            WRIST_RIGHT_DOWN,
    };
 
