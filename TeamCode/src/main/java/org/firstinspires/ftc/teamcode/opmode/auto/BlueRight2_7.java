@@ -22,7 +22,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.WaitPositionCommand;
 public class BlueRight2_7 extends AutoBase {
     public static Point start = new Point(-36, 62, Point.CARTESIAN);
     public static Point[] backdrop = {
-            new Point(48, 30, Point.CARTESIAN),
+            new Point(51, 30, Point.CARTESIAN),
             new Point(51.5, 34.5, Point.CARTESIAN),
             new Point(51.5,38.0, Point.CARTESIAN)
     };
@@ -69,7 +69,7 @@ public class BlueRight2_7 extends AutoBase {
         Path toStack = new Path(new BezierLine(
                 new Point(currentPose.position.x, currentPose.position.y, Point.CARTESIAN),
                 stack));
-        toStack.setZeroPowerAccelerationMultiplier(2);
+        toStack.setZeroPowerAccelerationMultiplier(3);
         toStack.setLinearHeadingInterpolation(Math.toRadians(-90), Math.toRadians(205), 0.8);
 
         sched.addAction(new ParallelAction(
@@ -98,7 +98,7 @@ public class BlueRight2_7 extends AutoBase {
                 new Point(40, 40, Point.CARTESIAN),
                 backdrop[SPIKE]
         ));
-        toBackstage.setZeroPowerAccelerationMultiplier(4);
+        toBackstage.setZeroPowerAccelerationMultiplier(3);
         toBackstage.setReversed(true);
         toBackstage.setConstantHeadingInterpolation(Math.toRadians(180));
 
@@ -159,22 +159,28 @@ public class BlueRight2_7 extends AutoBase {
         Path thruTruss = new Path(new BezierCurve(
                 new Point(currentPose.position.x, currentPose.position.y, Point.CARTESIAN),
                 new Point(40, 58, Point.CARTESIAN),
-                pastTruss,
-                intermediate
+//                pastTruss
+                new Point(0, 58, Point.CARTESIAN)
+//                intermediate
         ));
 
-        thruTruss.setZeroPowerAccelerationMultiplier(5);
+        thruTruss.setZeroPowerAccelerationMultiplier(6);
         thruTruss.setConstantHeadingInterpolation(Math.toRadians(180));
 
-        Path toStack = new Path(new BezierLine(
+        Path toStack = new Path(new BezierCurve(
+                new Point(0, 58, Point.CARTESIAN),
+//                pastTruss,
                 intermediate,
+                new Point(-40, 62, Point.CARTESIAN),
                 stack
         ));
 
         toStack.setZeroPowerAccelerationMultiplier(2);
-        toStack.setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(205), 0.8);
+        toStack.setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(205), 0.9);
 
-        PathChain intakePath = follower.pathBuilder().addPath(thruTruss).addPath(toStack).build();
+        PathChain intakePath = follower.pathBuilder()
+                .addPath(thruTruss)
+                .addPath(toStack).build();
 
         sched.addAction(new ParallelAction(
                 new SequentialAction(
@@ -190,11 +196,11 @@ public class BlueRight2_7 extends AutoBase {
                         new WaitPositionCommand(follower, -36, false, true), // intermediate
                         intake.prepIntakeCount(false, false)
                 ),
-//                new FollowPathAction(follower, intakePath)
-                new SequentialAction(
-                        new FollowPathAction(follower, thruTruss),
-                        new FollowPathAction(follower, toStack)
-                )
+                new FollowPathAction(follower, intakePath)
+//                new SequentialAction(
+//                        new FollowPathAction(follower, thruTruss),
+//                        new FollowPathAction(follower, toStack)
+//                )
         ));
         sched.run();
 
@@ -212,7 +218,7 @@ public class BlueRight2_7 extends AutoBase {
         Path toTruss = new Path(new BezierLine(
                 new Point(currentPose.position.x, currentPose.position.y, Point.CARTESIAN),
                 intermediate));
-        toTruss.setZeroPowerAccelerationMultiplier(4);
+        toTruss.setZeroPowerAccelerationMultiplier(2);
         toTruss.setReversed(true);
         toTruss.setLinearHeadingInterpolation(Math.toRadians(205), Math.toRadians(180), 0.8);
 
@@ -223,7 +229,7 @@ public class BlueRight2_7 extends AutoBase {
                 new Point(40, 40, Point.CARTESIAN),
                 scoring
         ));
-        toBackstage.setZeroPowerAccelerationMultiplier(4);
+        toBackstage.setZeroPowerAccelerationMultiplier(3);
         toBackstage.setReversed(true);
         toBackstage.setConstantHeadingInterpolation(Math.toRadians(180));
 
@@ -238,8 +244,9 @@ public class BlueRight2_7 extends AutoBase {
                         intake.intakeOff(),
                         outtake.extendOuttakeCycleBlocking(),
                         outtake.armScoring(),
-                        outtake.wristVerticalFlip(),
-                        intake.feedOpen()
+                        outtake.wristVertical(),
+                        intake.feedOpen(),
+                        new SleepAction(0.25)
                 )
         ));
         sched.addAction(outtake.clawOpen());
@@ -251,8 +258,11 @@ public class BlueRight2_7 extends AutoBase {
         Pose2d currentPose = follower.getPose();
         Path tryAgain = new Path(new BezierCurve(
                 new Point(currentPose.position.x, currentPose.position.y, Point.CARTESIAN),
-                new Point(currentPose.position.x, currentPose.position.y - 6, Point.CARTESIAN)
+                new Point(currentPose.position.x, currentPose.position.y - 4, Point.CARTESIAN)
                 ));
+        tryAgain.setConstantHeadingInterpolation(Math.toRadians(205));
+
+        intake.wristStoredInstant();
         sched.addAction(new SequentialAction(
                 intake.intakeReverse(),
                 new FollowPathAction(follower, tryAgain),
