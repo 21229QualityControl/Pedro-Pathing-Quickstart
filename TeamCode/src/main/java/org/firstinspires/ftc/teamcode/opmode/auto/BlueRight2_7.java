@@ -29,15 +29,16 @@ public class BlueRight2_7 extends AutoBase {
     public static Point scoring = new Point(48, 40, Point.CARTESIAN);
     public static Point scoringHigh = new Point(47, 40, Point.CARTESIAN);
     public static Point[] spike = {
-            new Point(-48, 39, Point.CARTESIAN),
+            new Point(-48, 36, Point.CARTESIAN),
             new Point(28, 22, Point.CARTESIAN), // the last 2 positions aren't accurate
             new Point(32, 35, Point.CARTESIAN)
     };
     public static Point spikeBackedOut = new Point(-48, 50, Point.CARTESIAN);
-    public static Point intermediate = new Point(-36, 58, Point.CARTESIAN);
-    public static Point pastTruss = new Point(30, 58, Point.CARTESIAN);
-    public static Point stack = new Point(-56.5, 37, Point.CARTESIAN);
-    public static Point secondStack = new Point(-58.5, 15, Point.CARTESIAN);
+    public static Point intermediate = new Point(-36, 56, Point.CARTESIAN);
+    public static Point pastTruss = new Point(30, 56, Point.CARTESIAN);
+    public static Point stack = new Point(-56.5, 38, Point.CARTESIAN);
+    public static Point stackPosition2 = new Point(-56.5, 32, Point.CARTESIAN);
+    public static Point secondStack = new Point(-58.5, 34, Point.CARTESIAN);
 
     @Override
     protected Pose2d getStartPose() {
@@ -54,11 +55,11 @@ public class BlueRight2_7 extends AutoBase {
         intakeStack(false, false, false);
         cycle(false, false);
 
-        intakeStack(false, false, false);
+        intakeStack(false, false, true);
         cycle(false, true);
 
-//        intakeStack(false, true, true);
-//        cycle(true, true);
+        intakeStack(false, true, false);
+        cycle(true, true);
     }
 
     private void firstCycle() {
@@ -93,7 +94,7 @@ public class BlueRight2_7 extends AutoBase {
 
         Path toBackstage = new Path(new BezierCurve(
                 intermediate,
-                new Point(20, 58, Point.CARTESIAN),
+                new Point(20, 56, Point.CARTESIAN),
                 pastTruss,
                 new Point(40, 40, Point.CARTESIAN),
                 backdrop[SPIKE]
@@ -153,14 +154,15 @@ public class BlueRight2_7 extends AutoBase {
         sched.run();
     }
 
-    private void intakeStack(boolean first, boolean nextStack, boolean lastCycle) {
+    private void intakeStack(boolean first, boolean nextStack, boolean secondCycle) {
         Pose2d currentPose = follower.getPose();
+
 
         Path thruTruss = new Path(new BezierCurve(
                 new Point(currentPose.position.x, currentPose.position.y, Point.CARTESIAN),
-                new Point(40, 58, Point.CARTESIAN),
+                new Point(40, 56, Point.CARTESIAN),
 //                pastTruss
-                new Point(0, 58, Point.CARTESIAN)
+                new Point(0, 56, Point.CARTESIAN)
 //                intermediate
         ));
 
@@ -168,15 +170,16 @@ public class BlueRight2_7 extends AutoBase {
         thruTruss.setConstantHeadingInterpolation(Math.toRadians(180));
 
         Path toStack = new Path(new BezierCurve(
-                new Point(0, 58, Point.CARTESIAN),
+                new Point(0, 56, Point.CARTESIAN),
 //                pastTruss,
                 intermediate,
                 new Point(-40, 62, Point.CARTESIAN),
-                stack
+                nextStack ? secondStack : (secondCycle ? stackPosition2 : stack)
         ));
 
-        toStack.setZeroPowerAccelerationMultiplier(2);
-        toStack.setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(205), 0.9);
+        toStack.setZeroPowerAccelerationMultiplier(4);
+        toStack.setLinearHeadingInterpolation(Math.toRadians(180),
+                nextStack ? Math.toRadians(220) : Math.toRadians(205), 0.9);
 
         PathChain intakePath = follower.pathBuilder()
                 .addPath(thruTruss)
@@ -224,7 +227,7 @@ public class BlueRight2_7 extends AutoBase {
 
         Path toBackstage = new Path(new BezierCurve(
                 intermediate,
-                new Point(20, 58, Point.CARTESIAN),
+                new Point(20, 56, Point.CARTESIAN),
                 pastTruss,
                 new Point(40, 40, Point.CARTESIAN),
                 scoring
@@ -240,7 +243,7 @@ public class BlueRight2_7 extends AutoBase {
                 new SequentialAction(
                         new WaitPositionCommand(follower, -36, true, true),
                         intake.pixelCount() == 2 ? outtake.clawClosed() : outtake.clawSingleClosed(),
-                        new WaitPositionCommand(follower, 30, true, true),
+                        new WaitPositionCommand(follower, 20, true, true),
                         intake.intakeOff(),
                         outtake.extendOuttakeCycleBlocking(),
                         outtake.armScoring(),
