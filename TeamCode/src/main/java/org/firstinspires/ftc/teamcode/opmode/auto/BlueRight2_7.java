@@ -58,8 +58,10 @@ public class BlueRight2_7 extends AutoBase {
         intakeStack(false, false, true);
         cycle(false, true);
 
-        intakeStack(false, true, false);
-        cycle(true, true);
+        if (getRuntime() < 22) {
+            intakeStack(false, true, false);
+            cycle(true, true);
+        }
     }
 
     private void firstCycle() {
