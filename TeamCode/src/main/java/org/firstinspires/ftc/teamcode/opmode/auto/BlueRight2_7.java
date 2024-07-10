@@ -29,16 +29,16 @@ public class BlueRight2_7 extends AutoBase {
     public static Point scoring = new Point(48, 40, Point.CARTESIAN);
     public static Point scoringHigh = new Point(47, 40, Point.CARTESIAN);
     public static Point[] spike = {
-            new Point(-48, 36, Point.CARTESIAN),
+            new Point(-46.5, 36, Point.CARTESIAN),
             new Point(28, 22, Point.CARTESIAN), // the last 2 positions aren't accurate
             new Point(32, 35, Point.CARTESIAN)
     };
     public static Point spikeBackedOut = new Point(-48, 50, Point.CARTESIAN);
     public static Point intermediate = new Point(-36, 56, Point.CARTESIAN);
     public static Point pastTruss = new Point(30, 56, Point.CARTESIAN);
-    public static Point stack = new Point(-56.5, 38, Point.CARTESIAN);
+    public static Point stack = new Point(-56, 38, Point.CARTESIAN);
     public static Point stackPosition2 = new Point(-56.5, 32, Point.CARTESIAN);
-    public static Point secondStack = new Point(-58.5, 34, Point.CARTESIAN);
+    public static Point secondStack = new Point(-59, 26, Point.CARTESIAN);
 
     @Override
     protected Pose2d getStartPose() {
@@ -58,10 +58,10 @@ public class BlueRight2_7 extends AutoBase {
         intakeStack(false, false, true);
         cycle(false, true);
 
-        if (getRuntime() < 22) {
+//        if (getRuntime() < 22) {
             intakeStack(false, true, false);
             cycle(true, true);
-        }
+//        }
     }
 
     private void firstCycle() {
@@ -72,7 +72,7 @@ public class BlueRight2_7 extends AutoBase {
         Path toStack = new Path(new BezierLine(
                 new Point(currentPose.position.x, currentPose.position.y, Point.CARTESIAN),
                 stack));
-        toStack.setZeroPowerAccelerationMultiplier(3);
+        toStack.setZeroPowerAccelerationMultiplier(2);
         toStack.setLinearHeadingInterpolation(Math.toRadians(-90), Math.toRadians(205), 0.8);
 
         sched.addAction(new ParallelAction(
