@@ -59,7 +59,7 @@ public class ManualDriveEnhancements extends LinearOpMode {
    private Vector headingVector;
 
    private final PIDFController headingPIDF = new PIDFController(FollowerConstants.teleOpHeadingPIDFCoefficients);
-   private final PIDFController smallTranslationalPIDF = new PIDFController(FollowerConstants.smallTranslationalPIDFCoefficients);
+   private final PIDFController teleOpTranslationalPIDF = new PIDFController(FollowerConstants.teleOpTranslationalPIDFCoefficients);
 
    public static PIDCoefficients HEADING_PID = new PIDCoefficients(0, 0, 0);
    private PIDFController headingPid;
@@ -156,8 +156,9 @@ public class ManualDriveEnhancements extends LinearOpMode {
       double input_x;
       double input_y;
 
-      input_x = Math.pow(-g1.left_stick_y, 3) * speed;
-      input_y = Math.pow(-g1.left_stick_x, 3) * speed;
+      // TODO: Update all driver controls and make the strafing enhancement accessible by a button
+      input_x = Math.pow(-g1.left_stick_y, 3) * speed * SLOW_DRIVE_SPEED;
+      input_y = Math.pow(-g1.left_stick_x, 3) * speed * SLOW_DRIVE_SPEED;
       Log.d("input_x", Double.toString(input_x));
       Log.d("input_y", Double.toString(input_y));
 
@@ -172,11 +173,7 @@ public class ManualDriveEnhancements extends LinearOpMode {
       Log.d("desiredxPos", Double.toString(desiredxPos));
       double currentxPos = currentPose.position.x;
       double xPosError = desiredxPos - currentxPos;
-      double xPosErrorDirection = 1;
-      if (input_x != 0 || input_y != 0) {
-         // Get error direction when division by 0 isn't possible.
-         xPosErrorDirection = Math.abs(xPosError)/xPosError;
-      }
+
       Vector xPosCorrection = new Vector();
       xPosCorrection.setOrthogonalComponents(xPosError, 0);
 
@@ -212,12 +209,11 @@ public class ManualDriveEnhancements extends LinearOpMode {
       // driveVector components are the gamepad x and y values, assuming that they are in the same direction
       // as the x-axis and y-axis.
       // set the vector components to correct the robot's x-position.
-      smallTranslationalPIDF.updateError(xPosCorrection.getMagnitude());
-      xPosCorrection.setMagnitude(smallTranslationalPIDF.runPIDF() + smallTranslationalPIDFFeedForward);
-//      driveVector.setOrthogonalComponents(input_x + xPosCorrection.getMagnitude() * xPosErrorDirection,
-//              input_y);
-      driveVector.setOrthogonalComponents(input_x + xPosError * 0.05, input_y);
-      Log.d("xPoseErrorDirection:", Double.toString(xPosErrorDirection));
+      teleOpTranslationalPIDF.updateError(xPosCorrection.getMagnitude());
+      xPosCorrection.setMagnitude(teleOpTranslationalPIDF.runPIDF() + smallTranslationalPIDFFeedForward);
+      driveVector.setOrthogonalComponents((input_x + xPosCorrection.getMagnitude() *
+              (xPosError < 0 ? -1 : 1)),
+              input_y);
       Log.d("xPosMagnitude:", Double.toString(xPosCorrection.getMagnitude()));
       driveVector.setMagnitude(MathFunctions.clamp(driveVector.getMagnitude(), 0, 1));
 
@@ -237,16 +233,13 @@ public class ManualDriveEnhancements extends LinearOpMode {
       Log.d("Heading Vector XPos:", Double.toString(headingVector.getXComponent()));
       Log.d("Heading Vector YPos:", Double.toString(headingVector.getYComponent()));
 
-//      follower.setMovementVectors(follower.getCentripetalForceCorrection(), headingVector, driveVector);
-      // for now don't use centripetal
+      // for now no centripetal force correction
       follower.setMovementVectors(new Vector(0, 0), headingVector, driveVector);
       follower.update();
 
       Log.d("X Position:", Double.toString(follower.getPose().position.x));
       Log.d("Y Position:", Double.toString(follower.getPose().position.y));
       Log.d("Heading:", Double.toString(follower.getPose().heading.toDouble()));
-
-      // TODO: Make robot move in TeleOp
    }
 
    private void intakeControls() {

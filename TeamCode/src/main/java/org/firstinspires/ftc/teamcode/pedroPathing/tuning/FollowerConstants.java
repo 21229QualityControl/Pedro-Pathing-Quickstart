@@ -84,6 +84,13 @@ public class FollowerConstants {
             0.04,
             0);
 
+    // TeleOp Translational PIDF Coefficients
+    public static CustomPIDFCoefficients teleOpTranslationalPIDFCoefficients = new CustomPIDFCoefficients(
+            0.02,
+            0,
+            0.01,
+            0);
+
     // Small translational Integral value
     public static CustomPIDFCoefficients smallTranslationalIntegral = new CustomPIDFCoefficients(
             0,

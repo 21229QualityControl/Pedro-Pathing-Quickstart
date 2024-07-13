@@ -116,6 +116,7 @@ public class Follower {
     public Vector correctiveVector;
 
     private final PIDFController smallTranslationalPIDF = new PIDFController(FollowerConstants.smallTranslationalPIDFCoefficients);
+    private final PIDFController teleOpTranslationalPIDF = new PIDFController(FollowerConstants.teleOpTranslationalPIDFCoefficients);
     private final PIDFController smallTranslationalIntegral = new PIDFController(FollowerConstants.smallTranslationalIntegral);
     private final PIDFController largeTranslationalPIDF = new PIDFController(FollowerConstants.largeTranslationalPIDFCoefficients);
     private final PIDFController largeTranslationalIntegral = new PIDFController(FollowerConstants.largeTranslationalIntegral);
