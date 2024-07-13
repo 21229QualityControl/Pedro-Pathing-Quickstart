@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.util.control.PIDCoefficients;
 @Config
 public class Outtake {
    public static PIDCoefficients outtakePID = new PIDCoefficients(0.007, 0.002, 0.0002);
-   public static int OUTTAKE_TELEOP = 0; // Changes throughout teleop
+   public static int OUTTAKE_TELEOP = 100; // Changes throughout teleop TODO: Figure out Teleop Outtake Slides Issue
    public static int OUTTAKE_BARELY_RAISED = 7; // Raises just enough to grab 1 pixel
    public static int LAYER_HEIGHT = 200; // Height of a layer of pixels for the slide, used for teleop
    public static int OUTTAKE_CLOSE = 525; // For close side auto
@@ -81,15 +81,18 @@ public class Outtake {
       this.claw.setPosition(CLAW_OPEN);
       this.wrist.setPosition(WRIST_VERTICAL);
       this.mosaic.setPosition(MOSAIC_STORED);
-      if (!Memory.FINISHED_AUTO && teleop) {
-         this.slide.setTargetPosition(OUTTAKE_PARTNER);
-         this.armRight.setPosition(ARM_RIGHT_SCORING);
-         this.claw.setPosition(CLAW_OPEN);
-         Memory.FINISHED_AUTO = true;
-      } else {
-         this.slide.setTargetPosition(0);
-         this.armRight.setPosition(ARM_RIGHT_STORED);
-      }
+//      if (!Memory.FINISHED_AUTO && teleop) {
+//         this.slide.setTargetPosition(OUTTAKE_PARTNER);
+//         this.armRight.setPosition(ARM_RIGHT_SCORING);
+//         this.claw.setPosition(CLAW_OPEN);
+//         Memory.FINISHED_AUTO = true;
+//         Log.d("initialization", "just after auto");
+//
+//      } else {
+//         Log.d("initialization", "just started teleop");
+//         this.slide.setTargetPosition(0);
+//         this.armRight.setPosition(ARM_RIGHT_STORED);
+//      }
    }
 
    public void prepInitializeSlides() {

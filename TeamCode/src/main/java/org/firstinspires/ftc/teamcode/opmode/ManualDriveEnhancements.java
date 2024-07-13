@@ -1,12 +1,14 @@
 package org.firstinspires.ftc.teamcode.opmode;
 
+import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.smallHeadingPIDFFeedForward;
+import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.smallTranslationalPIDFFeedForward;
 import static org.firstinspires.ftc.teamcode.util.control.PIDFControllerKt.EPSILON;
 
 import android.util.Log;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.ParallelAction;
-import com.acmerobotics.roadrunner.PoseVelocity2d;
+import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.Vector2d;
@@ -14,23 +16,25 @@ import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-//import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.pedroPathing.follower.Follower;
+import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
+import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.Vector;
+import org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Memory;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
-//import org.firstinspires.ftc.teamcode.subsystems.Plane;
 import org.firstinspires.ftc.teamcode.util.ActionScheduler;
 import org.firstinspires.ftc.teamcode.util.ActionUtil;
 import org.firstinspires.ftc.teamcode.util.GamePadController;
 import org.firstinspires.ftc.teamcode.util.LED;
 import org.firstinspires.ftc.teamcode.util.SmartGameTimer;
 import org.firstinspires.ftc.teamcode.util.control.PIDCoefficients;
-import org.firstinspires.ftc.teamcode.util.control.PIDFController;
+//import org.firstinspires.ftc.teamcode.util.control.PIDFController;
+import org.firstinspires.ftc.teamcode.pedroPathing.util.PIDFController;
 
 @Config
 @TeleOp(group = "Drive")
-public class ManualDrive extends LinearOpMode {
+public class ManualDriveEnhancements extends LinearOpMode {
    public static double TURN_SPEED = 0.75;
    public static double DRIVE_SPEED = 1;
    public static double SLOW_TURN_SPEED = 0.3;
@@ -38,6 +42,9 @@ public class ManualDrive extends LinearOpMode {
    public static double SLOW_DRIVE_SPEED = 0.3;
    public static double VISION_RANGE = 20;
    public static double VISION_CLOSE_DIST = 5;
+   // TODO: Make these configurable when the driver presses a button?
+   public static double desiredHeading;
+   public static double desiredxPos;
 
    private SmartGameTimer smartGameTimer;
    private GamePadController g1, g2;
@@ -48,6 +55,11 @@ public class ManualDrive extends LinearOpMode {
 //   private Plane plane;
    private LED led;
    private long lastLoopFinish = 0;
+   private Vector driveVector;
+   private Vector headingVector;
+
+   private final PIDFController headingPIDF = new PIDFController(FollowerConstants.teleOpHeadingPIDFCoefficients);
+   private final PIDFController smallTranslationalPIDF = new PIDFController(FollowerConstants.smallTranslationalPIDFCoefficients);
 
    public static PIDCoefficients HEADING_PID = new PIDCoefficients(0, 0, 0);
    private PIDFController headingPid;
@@ -68,17 +80,23 @@ public class ManualDrive extends LinearOpMode {
       outtake = new Outtake(hardwareMap);
 //      plane = new Plane(hardwareMap);
       led = new LED(hardwareMap);
-      headingPid = new PIDFController(HEADING_PID);
+      follower = new Follower(hardwareMap, false);
+//      headingPid = new PIDFController(HEADING_PID);
+      driveVector = new Vector();
+      headingVector = new Vector();
+      desiredHeading = follower.getPose().heading.toDouble();
+      desiredxPos = follower.getPose().position.x;
 
       if (Memory.RAN_AUTO) {
          smartGameTimer = new SmartGameTimer(true);
       } else { // No auto memory, pull in slides
          smartGameTimer = new SmartGameTimer(false);
-         outtake.prepInitializeSlides();
+         // TODO: Un comment out the outtake and make it work
+//         outtake.prepInitializeSlides();
          telemetry.addLine("Initializing slides...");
          telemetry.update();
          sleep(200);
-         while (opModeInInit() && outtake.initializeSlides()) {}
+//         while (opModeInInit() && outtake.initializeSlides()) {}
       }
       led.setPattern(RevBlinkinLedDriver.BlinkinPattern.BREATH_BLUE);
 
@@ -112,8 +130,8 @@ public class ManualDrive extends LinearOpMode {
 
 //         follower.updatePoseEstimate();
          sched.update();
-         outtake.update();
-         intake.update();
+//         outtake.update();
+//         intake.update();
 
          telemetry.addData("Time left", smartGameTimer.formattedString() + " (" + smartGameTimer.status() + ")");
          telemetry.addData("Pixel Count", intake.pixelCount());
@@ -140,33 +158,93 @@ public class ManualDrive extends LinearOpMode {
 
       input_x = Math.pow(-g1.left_stick_y, 3) * speed;
       input_y = Math.pow(-g1.left_stick_x, 3) * speed;
+      Log.d("input_x", Double.toString(input_x));
+      Log.d("input_y", Double.toString(input_y));
 
-      Vector2d input = new Vector2d(input_x, input_y);
+      // Made the robot strafe in a straight line for now
+      Pose2d currentPose = follower.getPose();
 
-      double input_turn = Math.pow(g1.left_trigger - g1.right_trigger, 3) * TURN_SPEED;
-      if (g1.leftBumper()) input_turn += SLOW_TURN_SPEED;
-      if (g1.rightBumper()) input_turn -= SLOW_TURN_SPEED;
+      Log.d("desiredHeading:", Double.toString(Math.toDegrees(desiredHeading)));
+      double currentHeading = currentPose.heading.toDouble();
+      double headingError = desiredHeading - currentHeading;
+      Log.d("headingError:", Double.toString(Math.toDegrees(headingError)));
+
+      Log.d("desiredxPos", Double.toString(desiredxPos));
+      double currentxPos = currentPose.position.x;
+      double xPosError = desiredxPos - currentxPos;
+      double xPosErrorDirection = 1;
+      if (input_x != 0 || input_y != 0) {
+         // Get error direction when division by 0 isn't possible.
+         xPosErrorDirection = Math.abs(xPosError)/xPosError;
+      }
+      Vector xPosCorrection = new Vector();
+      xPosCorrection.setOrthogonalComponents(xPosError, 0);
+
+      Log.d("xPosError", Double.toString(xPosError));
+
+//      Vector2d input = new Vector2d(input_x, input_y);
+
+//      double input_turn = Math.pow(g1.left_trigger - g1.right_trigger, 3) * TURN_SPEED;
+//      if (g1.leftBumper()) input_turn += SLOW_TURN_SPEED;
+//      if (g1.rightBumper()) input_turn -= SLOW_TURN_SPEED;
 
       // Driver 2 slow strafe
-      input = input.plus(new Vector2d(g2.left_stick_y * SLOW_DRIVE_SPEED, g2.left_stick_x * SLOW_DRIVE_SPEED));
-      input_turn += g2.left_trigger * D2_SLOW_TURN;
-      input_turn -= g2.right_trigger * D2_SLOW_TURN;
+//      input = input.plus(new Vector2d(g2.left_stick_y * SLOW_DRIVE_SPEED, g2.left_stick_x * SLOW_DRIVE_SPEED));
+//      input_turn += g2.left_trigger * D2_SLOW_TURN;
+//      input_turn -= g2.right_trigger * D2_SLOW_TURN;
+//
+//      if (Math.abs(g2.left_stick_x) != 0 && Math.abs(prevInputX) < EPSILON) {
+//         headingPid.setTargetPosition(follower.getPose().heading.toDouble());
+//      }
+//      prevInputX = g2.left_stick_x;
+//      if (Math.abs(input_turn) > EPSILON) {
+//         prevInputX = 0;
+//      }
+//      if (Math.abs(g1.left_stick_x + g1.left_stick_y + input_turn) < EPSILON && Math.abs(g2.left_stick_x) > 0) { // Do heading lock
+//         input_turn = headingPid.update(follower.getPose().heading.toDouble());
+//         if (g2.left_stick_x > 0) { // Account for heading turn overpowering strafe
+//            input = input.plus(new Vector2d(0, Math.abs(input_turn)));
+//         } else {
+//            input = input.plus(new Vector2d(0, -Math.abs(input_turn)));
+//         }
+//      }
 
-      if (Math.abs(g2.left_stick_x) != 0 && Math.abs(prevInputX) < EPSILON) {
-         headingPid.setTargetPosition(follower.getPose().heading.toDouble());
-      }
-      prevInputX = g2.left_stick_x;
-      if (Math.abs(input_turn) > EPSILON) {
-         prevInputX = 0;
-      }
-      if (Math.abs(g1.left_stick_x + g1.left_stick_y + input_turn) < EPSILON && Math.abs(g2.left_stick_x) > 0) { // Do heading lock
-         input_turn = headingPid.update(follower.getPose().heading.toDouble());
-         if (g2.left_stick_x > 0) { // Account for heading turn overpowering strafe
-            input = input.plus(new Vector2d(0, Math.abs(input_turn)));
-         } else {
-            input = input.plus(new Vector2d(0, -Math.abs(input_turn)));
-         }
-      }
+      // driveVector components are the gamepad x and y values, assuming that they are in the same direction
+      // as the x-axis and y-axis.
+      // set the vector components to correct the robot's x-position.
+      smallTranslationalPIDF.updateError(xPosCorrection.getMagnitude());
+      xPosCorrection.setMagnitude(smallTranslationalPIDF.runPIDF() + smallTranslationalPIDFFeedForward);
+//      driveVector.setOrthogonalComponents(input_x + xPosCorrection.getMagnitude() * xPosErrorDirection,
+//              input_y);
+      driveVector.setOrthogonalComponents(input_x + xPosError * 0.05, input_y);
+      Log.d("xPoseErrorDirection:", Double.toString(xPosErrorDirection));
+      Log.d("xPosMagnitude:", Double.toString(xPosCorrection.getMagnitude()));
+      driveVector.setMagnitude(MathFunctions.clamp(driveVector.getMagnitude(), 0, 1));
+
+      // driveVector is rotated by the robot's heading.
+      driveVector.rotateVector(desiredHeading);
+      Log.d("Drive Vector XPos:", Double.toString(driveVector.getXComponent()));
+      Log.d("Drive Vector YPos:", Double.toString(driveVector.getYComponent()));
+
+      // If robot heading is not the desired heading, the heading vector will correct it
+      // TODO: Replace the 0 * headingError with the PID
+//      headingVector.setComponents(Math.abs(0 * headingError), headingError);
+      headingPIDF.updateError(headingError);
+      headingVector.setComponents(MathFunctions.clamp(
+              headingPIDF.runPIDF() + smallHeadingPIDFFeedForward * MathFunctions.getTurnDirection(currentHeading,
+                      desiredHeading), -1, 1), currentHeading);
+      Log.d("Heading Vector Angle:", Double.toString(headingVector.getTheta()));
+      Log.d("Heading Vector XPos:", Double.toString(headingVector.getXComponent()));
+      Log.d("Heading Vector YPos:", Double.toString(headingVector.getYComponent()));
+
+//      follower.setMovementVectors(follower.getCentripetalForceCorrection(), headingVector, driveVector);
+      // for now don't use centripetal
+      follower.setMovementVectors(new Vector(0, 0), headingVector, driveVector);
+      follower.update();
+
+      Log.d("X Position:", Double.toString(follower.getPose().position.x));
+      Log.d("Y Position:", Double.toString(follower.getPose().position.y));
+      Log.d("Heading:", Double.toString(follower.getPose().heading.toDouble()));
 
       // TODO: Make robot move in TeleOp
    }

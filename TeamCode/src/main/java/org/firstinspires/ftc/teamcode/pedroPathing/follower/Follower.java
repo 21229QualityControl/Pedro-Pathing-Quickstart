@@ -120,6 +120,7 @@ public class Follower {
     private final PIDFController largeTranslationalPIDF = new PIDFController(FollowerConstants.largeTranslationalPIDFCoefficients);
     private final PIDFController largeTranslationalIntegral = new PIDFController(FollowerConstants.largeTranslationalIntegral);
     private final PIDFController smallHeadingPIDF = new PIDFController(FollowerConstants.smallHeadingPIDFCoefficients);
+    private final PIDFController teleOpHeadingPIDF = new PIDFController(FollowerConstants.teleOpHeadingPIDFCoefficients);
     private final PIDFController largeHeadingPIDF = new PIDFController(FollowerConstants.largeHeadingPIDFCoefficients);
     private final PIDFController smallDrivePIDF = new PIDFController(FollowerConstants.smallDrivePIDFCoefficients);
     private final PIDFController largeDrivePIDF = new PIDFController(FollowerConstants.largeDrivePIDFCoefficients);
@@ -559,11 +560,15 @@ public class Follower {
                 }
             }
         } else {
+            // Teleop enhancements code
             velocities.add(poseUpdater.getVelocity());
             velocities.remove(velocities.get(velocities.size() - 1));
 
             calculateAveragedVelocityAndAcceleration();
 
+            // teleVector[0]: centripetal force correction
+            // teleVector[1]: headingVector (heading power)
+            // teleVector[2]: driveVector (pathing power)
             drivePowers = driveVectorScaler.getDrivePowers(teleOpMovementVectors[0], teleOpMovementVectors[1], teleOpMovementVectors[2], poseUpdater.getPose().heading.toDouble());
 
             limitDrivePowers();

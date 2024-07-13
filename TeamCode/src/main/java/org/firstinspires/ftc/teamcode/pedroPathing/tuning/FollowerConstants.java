@@ -47,6 +47,13 @@ public class FollowerConstants {
             0.05,
             0);
 
+    // Small TeleOp heading error PIDF coefficients
+    public static CustomPIDFCoefficients teleOpHeadingPIDFCoefficients = new CustomPIDFCoefficients(
+            0.5,
+            0,
+            0.05,
+            0);
+
     // Feed forward constant added on to the small heading PIDF
     public static double smallHeadingPIDFFeedForward = 0.01;
 
