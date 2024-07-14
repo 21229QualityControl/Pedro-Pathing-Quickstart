@@ -57,12 +57,10 @@ public class ManualDriveEnhancements extends LinearOpMode {
    private long lastLoopFinish = 0;
    private Vector driveVector;
    private Vector headingVector;
+   private boolean isStrafeEnhanced = false;
 
    private final PIDFController headingPIDF = new PIDFController(FollowerConstants.teleOpHeadingPIDFCoefficients);
    private final PIDFController teleOpTranslationalPIDF = new PIDFController(FollowerConstants.teleOpTranslationalPIDFCoefficients);
-
-   public static PIDCoefficients HEADING_PID = new PIDCoefficients(0, 0, 0);
-   private PIDFController headingPid;
 
    @Override
    public void runOpMode() throws InterruptedException {
@@ -84,8 +82,6 @@ public class ManualDriveEnhancements extends LinearOpMode {
 //      headingPid = new PIDFController(HEADING_PID);
       driveVector = new Vector();
       headingVector = new Vector();
-      desiredHeading = follower.getPose().heading.toDouble();
-      desiredxPos = follower.getPose().position.x;
 
       if (Memory.RAN_AUTO) {
          smartGameTimer = new SmartGameTimer(true);
@@ -157,8 +153,80 @@ public class ManualDriveEnhancements extends LinearOpMode {
       double input_y;
 
       // TODO: Update all driver controls and make the strafing enhancement accessible by a button
-      input_x = Math.pow(-g1.left_stick_y, 3) * speed * SLOW_DRIVE_SPEED;
-      input_y = Math.pow(-g1.left_stick_x, 3) * speed * SLOW_DRIVE_SPEED;
+      input_x = Math.pow(-g1.left_stick_y, 3) * speed;
+      input_y = Math.pow(-g1.left_stick_x, 3) * speed;
+      Log.d("input_x", Double.toString(input_x));
+      Log.d("input_y", Double.toString(input_y));
+
+      Vector2d input = new Vector2d(input_x, input_y);
+
+      double input_turn = Math.pow(g1.left_trigger - g1.right_trigger, 3) * TURN_SPEED;
+      if (g1.leftBumper()) input_turn += SLOW_TURN_SPEED;
+      if (g1.rightBumper()) input_turn -= SLOW_TURN_SPEED;
+
+//       Driver 2 slow strafe
+      input = input.plus(new Vector2d(g2.left_stick_y * SLOW_DRIVE_SPEED, g2.left_stick_x * SLOW_DRIVE_SPEED));
+      input_turn += g2.left_trigger * D2_SLOW_TURN;
+      input_turn -= g2.right_trigger * D2_SLOW_TURN;
+
+      if (Math.abs(g2.left_stick_x) != 0 && Math.abs(prevInputX) < EPSILON) {
+         headingPIDF.setTargetPosition(follower.getPose().heading.toDouble());
+      }
+      prevInputX = g2.left_stick_x;
+      if (Math.abs(input_turn) > EPSILON) {
+         prevInputX = 0;
+      }
+      if (Math.abs(g1.left_stick_x + g1.left_stick_y + input_turn) < EPSILON && Math.abs(g2.left_stick_x) > 0) { // Do heading lock
+//         input_turn = headingPIDF.updateError(follower.getPose().heading.toDouble());
+         input_turn = headingPIDF.runPIDF();
+         if (g2.left_stick_x > 0) { // Account for heading turn overpowering strafe
+            input = input.plus(new Vector2d(0, Math.abs(input_turn)));
+         } else {
+            input = input.plus(new Vector2d(0, -Math.abs(input_turn)));
+         }
+      }
+
+      if (g1.startOnce()) { // toggle between strafe enhancing mode and normal driving
+         if (isStrafeEnhanced == false) {
+            isStrafeEnhanced = true;
+            // the desired heading and x position is recorded only once when the start button is pressed
+            desiredHeading = follower.getPose().heading.toDouble();
+            desiredxPos = follower.getPose().position.x;
+         } else {
+            // if strafing enhancement is already on, turn it off. Driving will go back to normal
+            isStrafeEnhanced = false;
+         }
+      }
+
+      if (isStrafeEnhanced == true) {
+         led.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLUE);
+         strafeEnhancement();
+      } else {
+         // driveVector components are the gamepad x and y values, assuming that they are in the same direction
+         // as the x-axis and y-axis.
+         driveVector.setOrthogonalComponents(input.x, input.y);
+         // magnitude is set between 0 and 1
+         driveVector.setMagnitude(MathFunctions.clamp(driveVector.getMagnitude(), 0, 1));
+         // driveVector is rotated by the robot's heading.
+         driveVector.rotateVector(follower.getPose().heading.toDouble());
+
+         headingVector.setComponents(input_turn, follower.getPose().heading.toDouble());
+
+         follower.setMovementVectors(follower.getCentripetalForceCorrection(), headingVector, driveVector);
+         follower.update();
+      }
+   }
+
+   private void strafeEnhancement() {
+      double visionDist = 10000;
+      double speed = Math.min(1, Math.max(0, ((visionDist - VISION_CLOSE_DIST) / VISION_RANGE))) * (DRIVE_SPEED - SLOW_DRIVE_SPEED) + SLOW_DRIVE_SPEED;
+
+      double input_x;
+      double input_y;
+
+      // TODO: Update all driver controls and make the strafing enhancement accessible by a button
+      input_x = Math.pow(-g1.left_stick_y, 3) * speed;
+      input_y = Math.pow(-g1.left_stick_x, 3) * speed;
       Log.d("input_x", Double.toString(input_x));
       Log.d("input_y", Double.toString(input_y));
 
@@ -179,52 +247,30 @@ public class ManualDriveEnhancements extends LinearOpMode {
 
       Log.d("xPosError", Double.toString(xPosError));
 
-//      Vector2d input = new Vector2d(input_x, input_y);
-
-//      double input_turn = Math.pow(g1.left_trigger - g1.right_trigger, 3) * TURN_SPEED;
-//      if (g1.leftBumper()) input_turn += SLOW_TURN_SPEED;
-//      if (g1.rightBumper()) input_turn -= SLOW_TURN_SPEED;
-
-      // Driver 2 slow strafe
-//      input = input.plus(new Vector2d(g2.left_stick_y * SLOW_DRIVE_SPEED, g2.left_stick_x * SLOW_DRIVE_SPEED));
-//      input_turn += g2.left_trigger * D2_SLOW_TURN;
-//      input_turn -= g2.right_trigger * D2_SLOW_TURN;
-//
-//      if (Math.abs(g2.left_stick_x) != 0 && Math.abs(prevInputX) < EPSILON) {
-//         headingPid.setTargetPosition(follower.getPose().heading.toDouble());
-//      }
-//      prevInputX = g2.left_stick_x;
-//      if (Math.abs(input_turn) > EPSILON) {
-//         prevInputX = 0;
-//      }
-//      if (Math.abs(g1.left_stick_x + g1.left_stick_y + input_turn) < EPSILON && Math.abs(g2.left_stick_x) > 0) { // Do heading lock
-//         input_turn = headingPid.update(follower.getPose().heading.toDouble());
-//         if (g2.left_stick_x > 0) { // Account for heading turn overpowering strafe
-//            input = input.plus(new Vector2d(0, Math.abs(input_turn)));
-//         } else {
-//            input = input.plus(new Vector2d(0, -Math.abs(input_turn)));
-//         }
-//      }
-
       // driveVector components are the gamepad x and y values, assuming that they are in the same direction
       // as the x-axis and y-axis.
       // set the vector components to correct the robot's x-position.
       teleOpTranslationalPIDF.updateError(xPosCorrection.getMagnitude());
       xPosCorrection.setMagnitude(teleOpTranslationalPIDF.runPIDF() + smallTranslationalPIDFFeedForward);
       driveVector.setOrthogonalComponents((input_x + xPosCorrection.getMagnitude() *
-              (xPosError < 0 ? -1 : 1)),
+                      (xPosError < 0 ? -1 : 1)),
               input_y);
       Log.d("xPosMagnitude:", Double.toString(xPosCorrection.getMagnitude()));
       driveVector.setMagnitude(MathFunctions.clamp(driveVector.getMagnitude(), 0, 1));
 
+      double driveRotation = desiredHeading;
+      if (driveRotation > 90) {
+         driveRotation -= 90;
+      } else if (driveRotation < -90) {
+         driveRotation += 90;
+      }
       // driveVector is rotated by the robot's heading.
-      driveVector.rotateVector(desiredHeading);
+      driveVector.rotateVector(driveRotation);
       Log.d("Drive Vector XPos:", Double.toString(driveVector.getXComponent()));
       Log.d("Drive Vector YPos:", Double.toString(driveVector.getYComponent()));
 
       // If robot heading is not the desired heading, the heading vector will correct it
       // TODO: Replace the 0 * headingError with the PID
-//      headingVector.setComponents(Math.abs(0 * headingError), headingError);
       headingPIDF.updateError(headingError);
       headingVector.setComponents(MathFunctions.clamp(
               headingPIDF.runPIDF() + smallHeadingPIDFFeedForward * MathFunctions.getTurnDirection(currentHeading,
@@ -465,6 +511,9 @@ public class ManualDriveEnhancements extends LinearOpMode {
    boolean warning2 = false;
    boolean warning3 = false;
    private void ledUpdate() {
+      if (isStrafeEnhanced == true) {
+         led.setPattern(RevBlinkinLedDriver.BlinkinPattern.SHOT_RED);
+      }
       int pixelCount = intake.pixelCount();
       if (pixelCount == 1) {
          led.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLUE);
