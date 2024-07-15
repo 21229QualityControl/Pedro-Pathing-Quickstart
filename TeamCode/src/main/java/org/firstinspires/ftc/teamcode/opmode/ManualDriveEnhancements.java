@@ -15,6 +15,8 @@ import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.follower.Follower;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
@@ -58,6 +60,10 @@ public class ManualDriveEnhancements extends LinearOpMode {
    private Vector driveVector;
    private Vector headingVector;
    private boolean isStrafeEnhanced = false;
+   private DcMotorEx leftFront;
+   private DcMotorEx leftRear;
+   private DcMotorEx rightFront;
+   private DcMotorEx rightRear;
 
    private final PIDFController headingPIDF = new PIDFController(FollowerConstants.teleOpHeadingPIDFCoefficients);
    private final PIDFController teleOpTranslationalPIDF = new PIDFController(FollowerConstants.teleOpTranslationalPIDFCoefficients);
@@ -82,6 +88,16 @@ public class ManualDriveEnhancements extends LinearOpMode {
 //      headingPid = new PIDFController(HEADING_PID);
       driveVector = new Vector();
       headingVector = new Vector();
+
+      leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
+      leftRear = hardwareMap.get(DcMotorEx.class, "leftBack");
+      rightRear = hardwareMap.get(DcMotorEx.class, "rightBack");
+      rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
+
+      leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+      leftRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+      rightRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+      rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
       if (Memory.RAN_AUTO) {
          smartGameTimer = new SmartGameTimer(true);
@@ -190,7 +206,7 @@ public class ManualDriveEnhancements extends LinearOpMode {
          if (isStrafeEnhanced == false) {
             isStrafeEnhanced = true;
             // the desired heading and x position is recorded only once when the start button is pressed
-            desiredHeading = follower.getPose().heading.toDouble();
+            desiredHeading = MathFunctions.normalizeAngle(follower.getPose().heading.toDouble());
             desiredxPos = follower.getPose().position.x;
          } else {
             // if strafing enhancement is already on, turn it off. Driving will go back to normal
@@ -234,9 +250,10 @@ public class ManualDriveEnhancements extends LinearOpMode {
       Pose2d currentPose = follower.getPose();
 
       Log.d("desiredHeading:", Double.toString(Math.toDegrees(desiredHeading)));
-      double currentHeading = currentPose.heading.toDouble();
+      double currentHeading = MathFunctions.normalizeAngle(currentPose.heading.toDouble());
+      Log.d("desiredHeadingCurrentNormal:", Double.toString(Math.toDegrees(currentHeading)));
       double headingError = desiredHeading - currentHeading;
-      Log.d("headingError:", Double.toString(Math.toDegrees(headingError)));
+      Log.d("desiredHeadingError:", Double.toString(Math.toDegrees(headingError)));
 
       Log.d("desiredxPos", Double.toString(desiredxPos));
       double currentxPos = currentPose.position.x;
@@ -247,16 +264,23 @@ public class ManualDriveEnhancements extends LinearOpMode {
 
       Log.d("xPosError", Double.toString(xPosError));
 
+//      // driveVector components are the gamepad x and y values, assuming that they are in the same direction
+//      // as the x-axis and y-axis.
+//      // set the vector components to correct the robot's x-position.
+//      teleOpTranslationalPIDF.updateError(xPosCorrection.getMagnitude());
+//      xPosCorrection.setMagnitude(teleOpTranslationalPIDF.runPIDF() + smallTranslationalPIDFFeedForward);
+//      driveVector.setOrthogonalComponents((input_x + xPosCorrection.getMagnitude() *
+//                      (xPosError < 0 ? -1 : 1)),
+//              input_y);
+//      Log.d("xPosMagnitude:", Double.toString(xPosCorrection.getMagnitude()));
+//      driveVector.setMagnitude(MathFunctions.clamp(driveVector.getMagnitude(), 0, 1));
       // driveVector components are the gamepad x and y values, assuming that they are in the same direction
       // as the x-axis and y-axis.
-      // set the vector components to correct the robot's x-position.
-      teleOpTranslationalPIDF.updateError(xPosCorrection.getMagnitude());
-      xPosCorrection.setMagnitude(teleOpTranslationalPIDF.runPIDF() + smallTranslationalPIDFFeedForward);
-      driveVector.setOrthogonalComponents((input_x + xPosCorrection.getMagnitude() *
-                      (xPosError < 0 ? -1 : 1)),
-              input_y);
-      Log.d("xPosMagnitude:", Double.toString(xPosCorrection.getMagnitude()));
+      driveVector.setOrthogonalComponents(input_x, input_y);
+      // magnitude is set between 0 and 1
       driveVector.setMagnitude(MathFunctions.clamp(driveVector.getMagnitude(), 0, 1));
+      // driveVector is rotated by the robot's heading.
+      driveVector.rotateVector(follower.getPose().heading.toDouble());
 
       double driveRotation = desiredHeading;
       if (driveRotation > 90) {
@@ -270,12 +294,12 @@ public class ManualDriveEnhancements extends LinearOpMode {
       Log.d("Drive Vector YPos:", Double.toString(driveVector.getYComponent()));
 
       // If robot heading is not the desired heading, the heading vector will correct it
-      // TODO: Replace the 0 * headingError with the PID
       headingPIDF.updateError(headingError);
       headingVector.setComponents(MathFunctions.clamp(
               headingPIDF.runPIDF() + smallHeadingPIDFFeedForward * MathFunctions.getTurnDirection(currentHeading,
-                      desiredHeading), -1, 1), currentHeading);
-      Log.d("Heading Vector Angle:", Double.toString(headingVector.getTheta()));
+                      desiredHeading, true), -1, 1), currentHeading);
+      Log.d("desiredHeading Vector Angle:", Double.toString(headingVector.getTheta()));
+      Log.d("desiredHeadingTurnDirection:", Double.toString(MathFunctions.getTurnDirection(currentHeading, desiredHeading)));
       Log.d("Heading Vector XPos:", Double.toString(headingVector.getXComponent()));
       Log.d("Heading Vector YPos:", Double.toString(headingVector.getYComponent()));
 

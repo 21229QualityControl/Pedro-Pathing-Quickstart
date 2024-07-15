@@ -104,6 +104,30 @@ public class MathFunctions {
         return -1; // clock wise
     }
 
+    // This should be used when doing the teleOp strafe enhancement. Sometimes the angles go from
+    // 0 to 359, causing the robot to turn the wrong way. If the difference between the normalized
+    // desired angle heading and the normalized current angle heading is greater than 45 degrees, then
+    // that difference will be subtracted by 360 to get the smaller and more reasonable angle difference.
+    // The heading lock will generally keep the robot heading similar to its desired heading, so we
+    // are sure that the heading difference won't be larger than 45 degrees.
+    // the startHeading and endHeading should be normalized
+    // Work in progress
+    public static double getTurnDirection(double startHeading, double endHeading, boolean forStrafing) {
+        double turnAngle = 0;
+        if (forStrafing == true) {
+            if (Math.abs(endHeading-startHeading) > Math.PI/4) {
+                turnAngle = 2 * Math.PI - Math.abs(endHeading-startHeading);
+            } else {
+                turnAngle = MathFunctions.normalizeAngle(endHeading-startHeading);
+            }
+        }
+
+        if (MathFunctions.normalizeAngle(turnAngle) >= 0 && MathFunctions.normalizeAngle(turnAngle) <= Math.PI) {
+            return 1; // counter clock wise
+        }
+        return -1; // clock wise
+    }
+
     /**
      * This returns the distance between a Pose2d and a Point,
      *
