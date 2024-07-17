@@ -104,11 +104,11 @@ public class ManualDriveEnhancements extends LinearOpMode {
       } else { // No auto memory, pull in slides
          smartGameTimer = new SmartGameTimer(false);
          // TODO: Un comment out the outtake and make it work
-//         outtake.prepInitializeSlides();
+         outtake.prepInitializeSlides();
          telemetry.addLine("Initializing slides...");
          telemetry.update();
          sleep(200);
-//         while (opModeInInit() && outtake.initializeSlides()) {}
+         while (opModeInInit() && outtake.initializeSlides()) {}
       }
       led.setPattern(RevBlinkinLedDriver.BlinkinPattern.BREATH_BLUE);
 
@@ -124,7 +124,7 @@ public class ManualDriveEnhancements extends LinearOpMode {
          g2.reset();
 
          // Init opmodes
-//         outtake.initialize(true);
+         outtake.initialize(true);
 //         plane.initialize();
          intake.initialize();
          smartGameTimer.resetIfStandard();
@@ -137,13 +137,13 @@ public class ManualDriveEnhancements extends LinearOpMode {
 
          move();
          intakeControls();
-//         outtakeControls();
+         outtakeControls();
          ledUpdate();
 
 //         follower.updatePoseEstimate();
          sched.update();
-//         outtake.update();
-//         intake.update();
+         outtake.update();
+         intake.update();
 
          telemetry.addData("Time left", smartGameTimer.formattedString() + " (" + smartGameTimer.status() + ")");
          telemetry.addData("Pixel Count", intake.pixelCount());
@@ -216,7 +216,7 @@ public class ManualDriveEnhancements extends LinearOpMode {
       }
 
       if (isStrafeEnhanced == true) {
-         led.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLUE);
+         led.setPattern(RevBlinkinLedDriver.BlinkinPattern.ORANGE);
          strafeEnhancement();
       } else {
          // driveVector components are the gamepad x and y values, assuming that they are in the same direction
@@ -370,25 +370,25 @@ public class ManualDriveEnhancements extends LinearOpMode {
       if (g1.backOnce()) {
 //         sched.queueAction(plane.scorePlane());
       }
-//      if (g2.startOnce()) {
-//         if (!outtake.isSlideHanging()) {
-//            // Handle scoring
-//            if (outtake.isArmScoring()) {
-//               sched.queueAction(new SequentialAction(
-//                       outtake.clawOpen(),
-//                       outtake.wristVertical(),
-//                       new SleepAction(0.4),
-//                       outtake.armStored()
-//               ));
-//            }
-//
-//            // Make mosaic fixer go out to not interfere with hanging
-//            sched.queueAction(outtake.mosaicFix());
-//            sched.queueAction(outtake.extendOuttakeHangBlocking());
-//         } else {
-//            sched.queueAction(outtake.retractOuttakeHang());
-//         }
-//      }
+      if (g2.startOnce()) {
+         if (!outtake.isSlideHanging()) {
+            // Handle scoring
+            if (outtake.isArmScoring()) {
+               sched.queueAction(new SequentialAction(
+                       outtake.clawOpen(),
+                       outtake.wristVertical(),
+                       new SleepAction(0.4),
+                       outtake.armStored()
+               ));
+            }
+
+            // Make mosaic fixer go out to not interfere with hanging
+            sched.queueAction(outtake.mosaicFix());
+            sched.queueAction(outtake.extendOuttakeHangBlocking());
+         } else {
+            sched.queueAction(outtake.retractOuttakeHang());
+         }
+      }
    }
 
    private void outtakeControls() {

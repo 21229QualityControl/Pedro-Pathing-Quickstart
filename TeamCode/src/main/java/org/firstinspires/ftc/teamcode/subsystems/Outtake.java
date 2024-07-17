@@ -81,25 +81,25 @@ public class Outtake {
       this.claw.setPosition(CLAW_OPEN);
       this.wrist.setPosition(WRIST_VERTICAL);
       this.mosaic.setPosition(MOSAIC_STORED);
-//      if (!Memory.FINISHED_AUTO && teleop) {
-//         this.slide.setTargetPosition(OUTTAKE_PARTNER);
-//         this.armRight.setPosition(ARM_RIGHT_SCORING);
-//         this.claw.setPosition(CLAW_OPEN);
-//         Memory.FINISHED_AUTO = true;
-//         Log.d("initialization", "just after auto");
-//
-//      } else {
-//         Log.d("initialization", "just started teleop");
-//         this.slide.setTargetPosition(0);
-//         this.armRight.setPosition(ARM_RIGHT_STORED);
-//      }
+      if (!Memory.FINISHED_AUTO && teleop) {
+         this.slide.setTargetPosition(OUTTAKE_PARTNER);
+         this.armRight.setPosition(ARM_RIGHT_SCORING);
+         this.claw.setPosition(CLAW_OPEN);
+         Memory.FINISHED_AUTO = true;
+         Log.d("initialization", "just after auto");
+
+      } else {
+         Log.d("initialization", "just started teleop");
+         this.slide.setTargetPosition(0);
+         this.armRight.setPosition(ARM_RIGHT_STORED);
+      }
    }
 
    public void prepInitializeSlides() {
       this.wrist.setPosition(WRIST_VERTICAL);
 //      this.armLeft.setPosition(ARM_LEFT_STORED);
       this.armRight.setPosition(ARM_RIGHT_STORED);
-      this.slide.setPower(-0.6);
+      this.slide.setPower(-0.1);
    }
 
    public boolean initializeSlides() {
