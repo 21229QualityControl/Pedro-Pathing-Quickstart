@@ -206,7 +206,8 @@ public class ManualDriveEnhancements extends LinearOpMode {
          if (isStrafeEnhanced == false) {
             isStrafeEnhanced = true;
             // the desired heading and x position is recorded only once when the start button is pressed
-            desiredHeading = MathFunctions.normalizeAngle(follower.getPose().heading.toDouble());
+//            desiredHeading = MathFunctions.normalizeAngle(follower.getPose().heading.toDouble());
+            desiredHeading = follower.getPose().heading.toDouble();
             desiredxPos = follower.getPose().position.x;
          } else {
             // if strafing enhancement is already on, turn it off. Driving will go back to normal
@@ -250,9 +251,10 @@ public class ManualDriveEnhancements extends LinearOpMode {
       Pose2d currentPose = follower.getPose();
 
       Log.d("desiredHeading:", Double.toString(Math.toDegrees(desiredHeading)));
-      double currentHeading = MathFunctions.normalizeAngle(currentPose.heading.toDouble());
-      Log.d("desiredHeadingCurrentNormal:", Double.toString(Math.toDegrees(currentHeading)));
-      double headingError = desiredHeading - currentHeading;
+      double currentHeading = currentPose.heading.toDouble();
+      Log.d("desiredHeadingCurrent:", Double.toString(Math.toDegrees(currentHeading)));
+      double headingError = MathFunctions.getSmallestAngleDifference(desiredHeading, currentHeading)
+              * MathFunctions.getTurnDirection(currentHeading, desiredHeading);
       Log.d("desiredHeadingError:", Double.toString(Math.toDegrees(headingError)));
 
       Log.d("desiredxPos", Double.toString(desiredxPos));
@@ -280,16 +282,8 @@ public class ManualDriveEnhancements extends LinearOpMode {
       // magnitude is set between 0 and 1
       driveVector.setMagnitude(MathFunctions.clamp(driveVector.getMagnitude(), 0, 1));
       // driveVector is rotated by the robot's heading.
-      driveVector.rotateVector(follower.getPose().heading.toDouble());
+//      driveVector.rotateVector(follower.getPose().heading.toDouble());
 
-      double driveRotation = desiredHeading;
-      if (driveRotation > 90) {
-         driveRotation -= 90;
-      } else if (driveRotation < -90) {
-         driveRotation += 90;
-      }
-      // driveVector is rotated by the robot's heading.
-      driveVector.rotateVector(driveRotation);
       Log.d("Drive Vector XPos:", Double.toString(driveVector.getXComponent()));
       Log.d("Drive Vector YPos:", Double.toString(driveVector.getYComponent()));
 
@@ -297,7 +291,7 @@ public class ManualDriveEnhancements extends LinearOpMode {
       headingPIDF.updateError(headingError);
       headingVector.setComponents(MathFunctions.clamp(
               headingPIDF.runPIDF() + smallHeadingPIDFFeedForward * MathFunctions.getTurnDirection(currentHeading,
-                      desiredHeading, true), -1, 1), currentHeading);
+                      desiredHeading), -1, 1), currentHeading);
       Log.d("desiredHeading Vector Angle:", Double.toString(headingVector.getTheta()));
       Log.d("desiredHeadingTurnDirection:", Double.toString(MathFunctions.getTurnDirection(currentHeading, desiredHeading)));
       Log.d("Heading Vector XPos:", Double.toString(headingVector.getXComponent()));
