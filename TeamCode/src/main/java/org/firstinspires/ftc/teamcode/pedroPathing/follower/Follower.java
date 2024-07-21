@@ -676,11 +676,16 @@ public class Follower {
         rawDriverError = 0;
         previousRawDriverError = 0;
         driveErrors = new double[3];
-        driveErrorTimes = new long[3];
-        for (int i = 0; i < driveErrorTimes.length; i++) {
-            driveErrorTimes[i] = System.currentTimeMillis();
+//        driveErrorTimes = new long[3];
+//        for (int i = 0; i < driveErrorTimes.length; i++) {
+//            driveErrorTimes[i] = System.currentTimeMillis();
+//        }
+        for (int i = 0; i < driveErrors.length; i++) {
+            driveErrors[i] = 0;
         }
-        driveKalmanFilter.reset(0, tunedDriveErrorVariance, tunedDriveErrorKalmanGain);
+
+//        driveKalmanFilter.reset(0, tunedDriveErrorVariance, tunedDriveErrorKalmanGain);
+        driveKalmanFilter.reset();
 
         for (int i = 0; i < motors.size(); i++) {
             motors.get(i).setPower(0);
@@ -780,21 +785,22 @@ public class Follower {
         previousRawDriverError = rawDriverError;
         rawDriverError =  velocityErrorVector.getMagnitude() * MathFunctions.getSign(MathFunctions.dotProduct(velocityErrorVector, currentPath.getClosestPointTangentVector()));
 
-        double previousErrorVelocity = (driveErrors[1] - driveErrors[0]) / ((driveErrorTimes[1] - driveErrorTimes[0]) / 1000.0);
-        double errorVelocity = (driveErrors[2] - driveErrors[1]) / ((driveErrorTimes[2] - driveErrorTimes[1]) / 1000.0);
-        double errorAcceleration = ((errorVelocity - previousErrorVelocity) / ((((driveErrorTimes[2] - driveErrorTimes[1]) / 1000.0) / 2.0) - (((driveErrorTimes[1] - driveErrorTimes[0]) / 1000.0) / 2.0)));
-        double time = (((driveErrorTimes[2] - driveErrorTimes[1]) / 1000.0) + ((driveErrorTimes[1] - driveErrorTimes[0]) / 1000.0)) / 2.0;
+//        double previousErrorVelocity = (driveErrors[1] - driveErrors[0]) / ((driveErrorTimes[1] - driveErrorTimes[0]) / 1000.0);
+//        double errorVelocity = (driveErrors[2] - driveErrors[1]) / ((driveErrorTimes[2] - driveErrorTimes[1]) / 1000.0);
+//        double errorAcceleration = ((errorVelocity - previousErrorVelocity) / ((((driveErrorTimes[2] - driveErrorTimes[1]) / 1000.0) / 2.0) - (((driveErrorTimes[1] - driveErrorTimes[0]) / 1000.0) / 2.0)));
+//        double time = (((driveErrorTimes[2] - driveErrorTimes[1]) / 1000.0) + ((driveErrorTimes[1] - driveErrorTimes[0]) / 1000.0)) / 2.0;
 
-        double projection = errorVelocity * time + 0.5 * errorAcceleration * Math.pow(time, 2);
+//        double projection = errorVelocity * time + 0.5 * errorAcceleration * Math.pow(time, 2);
+        double projection = 2 * driveErrors[2] - driveErrors[1];
 
         driveKalmanFilter.update(rawDriverError - previousRawDriverError, projection);
 
         for (int i = 0; i < driveErrors.length - 1; i++) {
             driveErrors[i] = driveErrors[i + 1];
-            driveErrorTimes[i] = driveErrorTimes[i + 1];
+//            driveErrorTimes[i] = driveErrorTimes[i + 1];
         }
         driveErrors[2] = driveKalmanFilter.getState();
-        driveErrorTimes[2] = System.currentTimeMillis();
+//        driveErrorTimes[2] = System.currentTimeMillis();
 
         return driveKalmanFilter.getState();
     }
@@ -1023,6 +1029,12 @@ public class Follower {
         telemetry.addData("velocity magnitude", getVelocity().getMagnitude());
         telemetry.addData("velocity heading", getVelocity().getTheta());
         driveKalmanFilter.debug(telemetry);
+//        for (int i = 0; i < driveErrors.length; i++) {
+//            telemetry.addData("drive error " + i, driveErrors[i]);
+//        }
+//        for (int i = 0; i < driveErrorTimes.length; i++) {
+//            telemetry.addData("drive error time " + i, driveErrorTimes[i]);
+//        }
         telemetry.update();
 
         if (drawOnDashboard) {
