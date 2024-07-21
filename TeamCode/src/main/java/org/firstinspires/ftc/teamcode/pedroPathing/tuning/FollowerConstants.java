@@ -101,7 +101,7 @@ public class FollowerConstants {
             0,
             0);
 
-    
+
     // Feed forward constant added on to the small translational PIDF
     public static double smallTranslationalPIDFFeedForward = 0.015;
 
@@ -170,8 +170,8 @@ public class FollowerConstants {
 
     // Kalman filter parameters for the drive error Kalman filter
     public static KalmanFilterParameters driveKalmanFilterParameters = new KalmanFilterParameters(
-            0.4,
-            0.1);
+            6,
+            1);
 
     // These are the empirically tuned parameters for the drive error Kalman filter so it works faster.
     public static double tunedDriveErrorVariance = 1;
