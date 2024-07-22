@@ -135,6 +135,7 @@ public class BlueRight2_7 extends AutoBase {
 
         purplePath.setConstantHeadingInterpolation(Math.toRadians(-90));
         purplePath.setZeroPowerAccelerationMultiplier(4);
+        purplePath.setPathEndTValueConstraint(0.95);
 
         sched.addAction(outtake.extendOuttakeBarelyOut());
         sched.addAction(intake.wristPreload());

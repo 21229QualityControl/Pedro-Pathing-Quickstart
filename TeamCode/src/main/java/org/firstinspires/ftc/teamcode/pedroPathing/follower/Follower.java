@@ -1028,6 +1028,8 @@ public class Follower {
         telemetry.addData("heading", getPose().heading.toDouble());
         telemetry.addData("velocity magnitude", getVelocity().getMagnitude());
         telemetry.addData("velocity heading", getVelocity().getTheta());
+        telemetry.addData("projection:", 2 * driveErrors[2] - driveErrors[1]);
+        telemetry.addData("KalmanUpdateData", rawDriverError - previousRawDriverError);
         driveKalmanFilter.debug(telemetry);
 //        for (int i = 0; i < driveErrors.length; i++) {
 //            telemetry.addData("drive error " + i, driveErrors[i]);

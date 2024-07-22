@@ -159,7 +159,7 @@ public class FollowerConstants {
 
     // Small drive PIDF coefficients
     public static CustomFilteredPIDFCoefficients smallDrivePIDFCoefficients = new CustomFilteredPIDFCoefficients(
-            0.02,
+            0.03,
             0,
             0.000003,
             0.06,
@@ -170,7 +170,7 @@ public class FollowerConstants {
 
     // Kalman filter parameters for the drive error Kalman filter
     public static KalmanFilterParameters driveKalmanFilterParameters = new KalmanFilterParameters(
-            6,
+            5,
             1);
 
     // These are the empirically tuned parameters for the drive error Kalman filter so it works faster.

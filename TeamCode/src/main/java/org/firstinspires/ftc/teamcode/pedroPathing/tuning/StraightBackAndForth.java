@@ -81,7 +81,7 @@ public class StraightBackAndForth extends OpMode {
             if (forward) {
                 forward = false;
                 backwards.setConstantHeadingInterpolation(0);
-                backwards.setZeroPowerAccelerationMultiplier(2.0);
+                backwards.setZeroPowerAccelerationMultiplier(1.5); //2
                 follower.followPath(backwards);
             } else {
                 forward = true;
