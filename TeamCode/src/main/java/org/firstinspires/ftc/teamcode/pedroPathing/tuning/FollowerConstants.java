@@ -145,7 +145,7 @@ public class FollowerConstants {
 
     // Large drive PIDF coefficients
     public static CustomFilteredPIDFCoefficients largeDrivePIDFCoefficients = new CustomFilteredPIDFCoefficients(
-            0.03, // 0.015
+            0.015, // 0.015
             0,
             0.00005,
             0.06,
@@ -159,14 +159,14 @@ public class FollowerConstants {
 
     // Small drive PIDF coefficients
     public static CustomFilteredPIDFCoefficients smallDrivePIDFCoefficients = new CustomFilteredPIDFCoefficients(
-            0.03,
+            0.01,
             0,
             0.000003,
             0.06,
             0);
 
     // Feed forward constant added on to the small drive PIDF
-    public static double smallDrivePIDFFeedForward = 0.01;
+    public static double smallDrivePIDFFeedForward = 0.03; // 0.01
 
     // Kalman filter parameters for the drive error Kalman filter
     public static KalmanFilterParameters driveKalmanFilterParameters = new KalmanFilterParameters(

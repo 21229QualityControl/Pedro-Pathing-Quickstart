@@ -135,7 +135,7 @@ public class BlueRight2_7 extends AutoBase {
 
         purplePath.setConstantHeadingInterpolation(Math.toRadians(-90));
         purplePath.setZeroPowerAccelerationMultiplier(4);
-        purplePath.setPathEndTValueConstraint(0.95);
+        purplePath.setPathEndTValueConstraint(0.85);
 
         sched.addAction(outtake.extendOuttakeBarelyOut());
         sched.addAction(intake.wristPreload());
@@ -242,6 +242,7 @@ public class BlueRight2_7 extends AutoBase {
         PathChain scoringPath = follower.pathBuilder().addPath(toTruss).addPath(toBackstage).build();
 
         sched.addAction(new ParallelAction(
+//                new FollowPathAction(follower, scoringPath, intermediate, toBackstage),
                 new FollowPathAction(follower, scoringPath),
                 new SequentialAction(
                         new WaitPositionCommand(follower, -36, true, true),
