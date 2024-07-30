@@ -11,8 +11,6 @@ import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstan
 import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.smallHeadingPIDFFeedForward;
 import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.smallTranslationalPIDFFeedForward;
 import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.translationalPIDFSwitch;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.tunedDriveErrorKalmanGain;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.tunedDriveErrorVariance;
 
 import android.util.Log;
 
@@ -28,6 +26,7 @@ import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigu
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.pedroPathing.localization.Pose;
 import org.firstinspires.ftc.teamcode.pedroPathing.localization.PoseUpdater;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.BezierPoint;
 import org.firstinspires.ftc.teamcode.pedroPathing.pathGeneration.MathFunctions;
@@ -44,7 +43,6 @@ import org.firstinspires.ftc.teamcode.pedroPathing.util.FilteredPIDFController;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.KalmanFilter;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.PIDFController;
 import org.firstinspires.ftc.teamcode.pedroPathing.util.PoseMessage;
-import org.firstinspires.ftc.teamcode.pedroPathing.util.cachinghardware.CachingDcMotorEX;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,8 +59,12 @@ import java.util.List;
  */
 @Config
 public class Follower {
-    private final HardwareMap hardwareMap;
+    private HardwareMap hardwareMap;
 
+    private DcMotorEx leftFront;
+    private DcMotorEx leftRear;
+    private DcMotorEx rightFront;
+    private DcMotorEx rightRear;
     private List<DcMotorEx> motors;
 
     private DriveVectorScaler driveVectorScaler;
@@ -90,6 +92,8 @@ public class Follower {
     private boolean auto = true;
     private boolean reachedParametricPathEnd;
     private boolean holdPositionAtEnd;
+    private boolean teleopDrive;
+    private boolean fieldCentric;
 
     private double maxPower = 1;
     private double previousSmallTranslationalIntegral;
@@ -102,6 +106,7 @@ public class Follower {
     private long reachedParametricPathEndTime;
 
     private double[] drivePowers;
+    private double[] teleopDriveValues;
 
     private Vector[] teleOpMovementVectors = new Vector[]{new Vector(), new Vector(), new Vector()};
 
@@ -113,6 +118,8 @@ public class Follower {
     private Vector averageAcceleration;
     private Vector smallTranslationalIntegralVector;
     private Vector largeTranslationalIntegralVector;
+    private Vector teleopDriveVector;
+    private Vector teleopHeadingVector;
     public Vector driveVector;
     public Vector headingVector;
     public Vector translationalVector;
@@ -157,19 +164,6 @@ public class Follower {
     }
 
     /**
-     * This creates a new Follower given a HardwareMap and sets whether the Follower is being used
-     * in autonomous or teleop.
-     *
-     * @param hardwareMap HardwareMap required
-     * @param setAuto     sets whether or not the Follower is being used in autonomous or teleop
-     */
-    public Follower(HardwareMap hardwareMap, boolean setAuto) {
-        this.hardwareMap = hardwareMap;
-        setAuto(setAuto);
-        initialize();
-    }
-
-    /**
      * This initializes the follower.
      * In this, the DriveVectorScaler and PoseUpdater is instantiated, the drive motors are
      * initialized and their behavior is set, and the variables involved in approximating first and
@@ -179,16 +173,14 @@ public class Follower {
         driveVectorScaler = new DriveVectorScaler(FollowerConstants.frontLeftVector);
         poseUpdater = new PoseUpdater(hardwareMap);
 
-        DcMotorEx leftFront = new CachingDcMotorEX(hardwareMap.get(DcMotorEx.class, "leftFront"));
-        DcMotorEx leftRear =  new CachingDcMotorEX(hardwareMap.get(DcMotorEx.class, "leftBack"));
-        DcMotorEx rightRear = new CachingDcMotorEX(hardwareMap.get(DcMotorEx.class, "rightBack"));
-        DcMotorEx rightFront = new CachingDcMotorEX(hardwareMap.get(DcMotorEx.class, "rightFront"));
+        leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
+        leftRear = hardwareMap.get(DcMotorEx.class, "leftBack");
+        rightRear = hardwareMap.get(DcMotorEx.class, "rightBack");
+        rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
 
         // TODO: Make sure that this is the direction your motors need to be reversed in.
-        leftFront.setDirection(DcMotorSimple.Direction.FORWARD);
-        leftRear.setDirection(DcMotorSimple.Direction.FORWARD);
-        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftRear.setDirection(DcMotorSimple.Direction.REVERSE);
 
         motors = Arrays.asList(leftFront, leftRear, rightFront, rightRear);
 
@@ -202,13 +194,8 @@ public class Follower {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         }
 
-        for (int i = 0; i < AVERAGED_VELOCITY_SAMPLE_NUMBER; i++) {
-            velocities.add(new Vector());
-        }
-        for (int i = 0; i < AVERAGED_VELOCITY_SAMPLE_NUMBER / 2; i++) {
-            accelerations.add(new Vector());
-        }
-        calculateAveragedVelocityAndAcceleration();
+        // TODO: Set this to true if you want to use field centric teleop drive.
+        fieldCentric = false;
 
         dashboardPoseTracker = new DashboardPoseTracker(poseUpdater);
 
@@ -221,6 +208,8 @@ public class Follower {
                 module.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
             }
         }
+
+        breakFollowing();
     }
 
     /**
@@ -240,6 +229,19 @@ public class Follower {
             if (Math.abs(drivePowers[i]) > maxPower) {
                 drivePowers[i] = maxPower * MathFunctions.getSign(drivePowers[i]);
             }
+        }
+    }
+
+    /**
+     * This gets a Point from the current Path from a specified t-value.
+     *
+     * @return returns the Point.
+     */
+    public Point getPointFromPath(double t) {
+        if (currentPath != null) {
+            return currentPath.getPoint(t);
+        } else {
+            return null;
         }
     }
 
@@ -440,6 +442,14 @@ public class Follower {
     }
 
     /**
+     * This starts teleop drive control.
+     */
+    public void startTeleopDrive() {
+        breakFollowing();
+        teleopDrive = true;
+    }
+
+    /**
      * This calls an update to the PoseUpdater, which updates the robot's current position estimate.
      * This also updates all the Follower's PIDFs, which updates the motor powers.
      */
@@ -460,7 +470,7 @@ public class Follower {
         double path_calc_timer = 0.0;
         double power_calc_timer = 0.0;
 
-        if (auto) {
+        if (!teleopDrive) {
             if (holdingPosition) {
                 closestPose = currentPath.getClosestPoint(poseUpdater.getPose(), 1);
 
@@ -582,7 +592,7 @@ public class Follower {
             // teleVector[0]: centripetal force correction
             // teleVector[1]: headingVector (heading power)
             // teleVector[2]: driveVector (pathing power)
-            drivePowers = driveVectorScaler.getDrivePowers(teleOpMovementVectors[0], teleOpMovementVectors[1], teleOpMovementVectors[2], poseUpdater.getPose().heading.toDouble());
+            drivePowers = driveVectorScaler.getDrivePowers(getCentripetalForceCorrection(), teleopHeadingVector, teleopDriveVector, poseUpdater.getPose().heading.toDouble());
 
             limitDrivePowers();
 
@@ -590,10 +600,43 @@ public class Follower {
                 motors.get(i).setPower(drivePowers[i]);
             }
         }
+    }
 
-        if(auto && drawOnDashboard) {
-            Drawing.drawDebug(this);
+    /**
+     * This sets the teleop drive vectors. This defaults to robot centric.
+     *
+     * @param forwardDrive determines the forward drive vector for the robot in teleop. In field centric
+     *                     movement, this is the x-axis.
+     * @param lateralDrive determines the lateral drive vector for the robot in teleop. In field centric
+     *                     movement, this is the y-axis.
+     * @param heading determines the heading vector for the robot in teleop.
+     */
+    public void setTeleOpMovementVectors(double forwardDrive, double lateralDrive, double heading) {
+        setTeleOpMovementVectors(forwardDrive, lateralDrive, heading, true);
+    }
+
+    /**
+     * This sets the teleop drive vectors.
+     *
+     * @param forwardDrive determines the forward drive vector for the robot in teleop. In field centric
+     *                     movement, this is the x-axis.
+     * @param lateralDrive determines the lateral drive vector for the robot in teleop. In field centric
+     *                     movement, this is the y-axis.
+     * @param heading determines the heading vector for the robot in teleop.
+     * @param robotCentric sets if the movement will be field or robot centric
+     */
+    public void setTeleOpMovementVectors(double forwardDrive, double lateralDrive, double heading, boolean robotCentric) {
+        teleopDriveValues[0] = MathFunctions.clamp(forwardDrive, -1, 1);
+        teleopDriveValues[1] = MathFunctions.clamp(lateralDrive, -1, 1);
+        teleopDriveValues[2] = MathFunctions.clamp(heading, -1, 1);
+        teleopDriveVector.setOrthogonalComponents(teleopDriveValues[0], teleopDriveValues[1]);
+        teleopDriveVector.setMagnitude(MathFunctions.clamp(teleopDriveVector.getMagnitude(), 0, 1));
+
+        if (robotCentric) {
+            teleopDriveVector.rotateVector(getPose().heading.toDouble());
         }
+
+        teleopHeadingVector.setComponents(teleopDriveValues[2], getPose().heading.toDouble());
     }
 
     /**
@@ -651,6 +694,7 @@ public class Follower {
      * This resets the PIDFs and stops following the current Path.
      */
     public void breakFollowing() {
+        teleopDrive = false;
         holdingPosition = false;
         isBusy = false;
         reachedParametricPathEnd = false;
@@ -675,17 +719,24 @@ public class Follower {
         headingError = 0;
         rawDriverError = 0;
         previousRawDriverError = 0;
-        driveErrors = new double[3];
-//        driveErrorTimes = new long[3];
-//        for (int i = 0; i < driveErrorTimes.length; i++) {
-//            driveErrorTimes[i] = System.currentTimeMillis();
-//        }
+        driveErrors = new double[2];
         for (int i = 0; i < driveErrors.length; i++) {
             driveErrors[i] = 0;
         }
 
 //        driveKalmanFilter.reset(0, tunedDriveErrorVariance, tunedDriveErrorKalmanGain);
         driveKalmanFilter.reset();
+
+        for (int i = 0; i < AVERAGED_VELOCITY_SAMPLE_NUMBER; i++) {
+            velocities.add(new Vector());
+        }
+        for (int i = 0; i < AVERAGED_VELOCITY_SAMPLE_NUMBER / 2; i++) {
+            accelerations.add(new Vector());
+        }
+        calculateAveragedVelocityAndAcceleration();
+        teleopDriveValues = new double[3];
+        teleopDriveVector = new Vector();
+        teleopHeadingVector = new Vector();
 
         for (int i = 0; i < motors.size(); i++) {
             motors.get(i).setPower(0);
@@ -699,14 +750,6 @@ public class Follower {
      */
     public boolean isBusy() {
         return isBusy;
-    }
-
-    /**
-     * Sets the correctional, heading, and drive movement vectors for teleop enhancements.
-     * The correctional Vector only accounts for an approximated centripetal correction.
-     */
-    public void setMovementVectors(Vector correctional, Vector heading, Vector drive) {
-        teleOpMovementVectors = new Vector[]{correctional, heading, drive};
     }
 
     /**
@@ -755,7 +798,7 @@ public class Follower {
 
         Vector distanceToGoalVector = MathFunctions.scalarMultiplyVector(MathFunctions.normalizeVector(currentPath.getClosestPointTangentVector()), distanceToGoal);
         Vector tangentVector = MathFunctions.normalizeVector(currentPath.getClosestPointTangentVector());
-        Vector velocity = new Vector(MathFunctions.dotProduct(getVelocity(), tangentVector), currentPath.getClosestPointTangentVector().getTheta());
+        Vector velocity = new Vector(MathFunctions.dotProduct(getVelocity(), MathFunctions.normalizeVector(currentPath.getClosestPointTangentVector())), currentPath.getClosestPointTangentVector().getTheta());
 
         Vector forwardHeadingVector = new Vector(1.0, poseUpdater.getPose().heading.toDouble());
         double forwardVelocity = MathFunctions.dotProduct(forwardHeadingVector, velocity);
@@ -773,34 +816,17 @@ public class Follower {
         Vector lateralVelocityError = new Vector(lateralVelocityGoal - lateralVelocityZeroPowerDecay - lateralVelocity, lateralHeadingVector.getTheta());
         Vector velocityErrorVector = MathFunctions.addVectors(forwardVelocityError, lateralVelocityError);
 
-//        Log.d("Follower_logger",
-//                "forwardDistanceToGoal:" + forwardDistanceToGoal
-//                + " | forwardVelocityGoal:" + forwardVelocityGoal
-//                + " | forwardVelocityZeroPowerDecay:" + forwardVelocityZeroPowerDecay
-//                + " | forwardVelocity: " + forwardVelocity
-//                + " | forwardVelocityError: " + forwardVelocityError
-//                + " | Multip: " + currentPath.getZeroPowerAccelerationMultiplier() );
-
-//        return velocityErrorVector.getMagnitude() * MathFunctions.getSign(MathFunctions.dotProduct(velocityErrorVector, currentPath.getClosestPointTangentVector()));
         previousRawDriverError = rawDriverError;
         rawDriverError =  velocityErrorVector.getMagnitude() * MathFunctions.getSign(MathFunctions.dotProduct(velocityErrorVector, currentPath.getClosestPointTangentVector()));
 
-//        double previousErrorVelocity = (driveErrors[1] - driveErrors[0]) / ((driveErrorTimes[1] - driveErrorTimes[0]) / 1000.0);
-//        double errorVelocity = (driveErrors[2] - driveErrors[1]) / ((driveErrorTimes[2] - driveErrorTimes[1]) / 1000.0);
-//        double errorAcceleration = ((errorVelocity - previousErrorVelocity) / ((((driveErrorTimes[2] - driveErrorTimes[1]) / 1000.0) / 2.0) - (((driveErrorTimes[1] - driveErrorTimes[0]) / 1000.0) / 2.0)));
-//        double time = (((driveErrorTimes[2] - driveErrorTimes[1]) / 1000.0) + ((driveErrorTimes[1] - driveErrorTimes[0]) / 1000.0)) / 2.0;
-
-//        double projection = errorVelocity * time + 0.5 * errorAcceleration * Math.pow(time, 2);
-        double projection = 2 * driveErrors[2] - driveErrors[1];
+        double projection = 2 * driveErrors[1] - driveErrors[0];
 
         driveKalmanFilter.update(rawDriverError - previousRawDriverError, projection);
 
         for (int i = 0; i < driveErrors.length - 1; i++) {
             driveErrors[i] = driveErrors[i + 1];
-//            driveErrorTimes[i] = driveErrorTimes[i + 1];
         }
-        driveErrors[2] = driveKalmanFilter.getState();
-//        driveErrorTimes[2] = System.currentTimeMillis();
+        driveErrors[1] = driveKalmanFilter.getState();
 
         return driveKalmanFilter.getState();
     }
@@ -920,10 +946,9 @@ public class Follower {
      * @return returns the centripetal force correction vector.
      */
     public Vector getCentripetalForceCorrection() {
-  //      return new Vector();
         if (!useCentripetal) return new Vector();
         double curvature;
-        if (auto) {
+        if (!teleopDrive) {
             curvature = currentPath.getClosestPointCurvature();
         } else {
             double yPrime = averageVelocity.getYComponent() / averageVelocity.getXComponent();
@@ -944,15 +969,6 @@ public class Follower {
      */
     public Pose2d getClosestPose() {
         return closestPose;
-    }
-
-    /**
-     * This sets whether or not the Follower is being used in auto or teleop.
-     *
-     * @param set sets auto or not
-     */
-    public void setAuto(boolean set) {
-        auto = set;
     }
 
     /**
@@ -1026,19 +1042,13 @@ public class Follower {
         telemetry.addData("x", getPose().position.x);
         telemetry.addData("y", getPose().position.y);
         telemetry.addData("heading", getPose().heading.toDouble());
+//        telemetry.addData("total heading", poseUpdater.getTotalHeading());
         telemetry.addData("velocity magnitude", getVelocity().getMagnitude());
         telemetry.addData("velocity heading", getVelocity().getTheta());
         telemetry.addData("projection:", 2 * driveErrors[2] - driveErrors[1]);
         telemetry.addData("KalmanUpdateData", rawDriverError - previousRawDriverError);
         driveKalmanFilter.debug(telemetry);
-//        for (int i = 0; i < driveErrors.length; i++) {
-//            telemetry.addData("drive error " + i, driveErrors[i]);
-//        }
-//        for (int i = 0; i < driveErrorTimes.length; i++) {
-//            telemetry.addData("drive error time " + i, driveErrorTimes[i]);
-//        }
         telemetry.update();
-
         if (drawOnDashboard) {
             Drawing.drawDebug(this);
         }
@@ -1055,17 +1065,13 @@ public class Follower {
     }
 
     /**
-     * This gets a Point from the current Path from a specified t-value.
+     * This returns the total number of radians the robot has turned.
      *
-     * @return returns the Point.
+     * @return the total heading.
      */
-    public Point getPointFromPath(double t) {
-        if (currentPath != null) {
-            return currentPath.getPoint(t);
-        } else {
-            return null;
-        }
-    }
+//    public double getTotalHeading() {
+//        return poseUpdater.getTotalHeading();
+//    }
 
     /**
      * This returns the current Path the Follower is following. This can be null.
