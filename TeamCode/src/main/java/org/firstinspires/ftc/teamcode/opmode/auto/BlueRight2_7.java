@@ -34,7 +34,7 @@ public class BlueRight2_7 extends AutoBase {
             new Point(32, 35, Point.CARTESIAN)
     };
     public static Point spikeBackedOut = new Point(-48, 50, Point.CARTESIAN);
-    public static Point intermediate = new Point(-36, 56, Point.CARTESIAN);
+    public static Point intermediate = new Point(-36, 56, Point.CARTESIAN); // y=56
     public static Point pastTruss = new Point(30, 56, Point.CARTESIAN);
     public static Point stack = new Point(-56, 38, Point.CARTESIAN);
     public static Point stackPosition2 = new Point(-56.5, 32, Point.CARTESIAN);
@@ -96,7 +96,8 @@ public class BlueRight2_7 extends AutoBase {
 
         Path toBackstage = new Path(new BezierCurve(
                 intermediate,
-                new Point(20, 56, Point.CARTESIAN),
+//                new Point(-36, 55, Point.CARTESIAN), //56
+                new Point(20, 55, Point.CARTESIAN), //56
                 pastTruss,
                 new Point(40, 40, Point.CARTESIAN),
                 backdrop[SPIKE]
@@ -230,6 +231,7 @@ public class BlueRight2_7 extends AutoBase {
 
         Path toBackstage = new Path(new BezierCurve(
                 intermediate,
+//                new Point(-36, 56, Point.CARTESIAN),
                 new Point(20, 56, Point.CARTESIAN),
                 pastTruss,
                 new Point(40, 40, Point.CARTESIAN),
@@ -242,7 +244,8 @@ public class BlueRight2_7 extends AutoBase {
         PathChain scoringPath = follower.pathBuilder().addPath(toTruss).addPath(toBackstage).build();
 
         sched.addAction(new ParallelAction(
-//                new FollowPathAction(follower, scoringPath, intermediate, toBackstage),
+//                new FollowPathAction(follower, scoringPath, new Point(-36, 56, Point.CARTESIAN),
+//                        toBackstage, -60, 24),
                 new FollowPathAction(follower, scoringPath),
                 new SequentialAction(
                         new WaitPositionCommand(follower, -36, true, true),
