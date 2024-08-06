@@ -84,7 +84,7 @@ public class ManualDriveEnhancements extends LinearOpMode {
       outtake = new Outtake(hardwareMap);
 //      plane = new Plane(hardwareMap);
       led = new LED(hardwareMap);
-      follower = new Follower(hardwareMap, false);
+      follower = new Follower(hardwareMap);
 //      headingPid = new PIDFController(HEADING_PID);
       driveVector = new Vector();
       headingVector = new Vector();
@@ -98,6 +98,8 @@ public class ManualDriveEnhancements extends LinearOpMode {
       leftRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
       rightRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
       rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+      follower.startTeleopDrive();
 
       if (Memory.RAN_AUTO) {
          smartGameTimer = new SmartGameTimer(true);
@@ -162,15 +164,12 @@ public class ManualDriveEnhancements extends LinearOpMode {
    private double prevInputX = 0;
    private void move() {
       // Main driver controls
-      double visionDist = 10000;
-      double speed = Math.min(1, Math.max(0, ((visionDist - VISION_CLOSE_DIST) / VISION_RANGE))) * (DRIVE_SPEED - SLOW_DRIVE_SPEED) + SLOW_DRIVE_SPEED;
-
       double input_x;
       double input_y;
 
-      // TODO: Update all driver controls and make the strafing enhancement accessible by a button
-      input_x = Math.pow(-g1.left_stick_y, 3) * speed;
-      input_y = Math.pow(-g1.left_stick_x, 3) * speed;
+      // TODO: Because of the new Pedro pathing update, adjust the Manual Drive Enhancements controls accordingly
+      input_x = Math.pow(-g1.left_stick_y, 3);
+      input_y = Math.pow(-g1.left_stick_x, 3);
       Log.d("input_x", Double.toString(input_x));
       Log.d("input_y", Double.toString(input_y));
 
@@ -219,31 +218,19 @@ public class ManualDriveEnhancements extends LinearOpMode {
          led.setPattern(RevBlinkinLedDriver.BlinkinPattern.ORANGE);
          strafeEnhancement();
       } else {
-         // driveVector components are the gamepad x and y values, assuming that they are in the same direction
-         // as the x-axis and y-axis.
-         driveVector.setOrthogonalComponents(input.x, input.y);
-         // magnitude is set between 0 and 1
-         driveVector.setMagnitude(MathFunctions.clamp(driveVector.getMagnitude(), 0, 1));
-         // driveVector is rotated by the robot's heading.
-         driveVector.rotateVector(follower.getPose().heading.toDouble());
-
-         headingVector.setComponents(input_turn, follower.getPose().heading.toDouble());
-
-         follower.setMovementVectors(follower.getCentripetalForceCorrection(), headingVector, driveVector);
+         follower.setTeleOpMovementVectors(input_x, input_y, input_turn, true, false);
          follower.update();
       }
    }
 
    private void strafeEnhancement() {
-      double visionDist = 10000;
-      double speed = Math.min(1, Math.max(0, ((visionDist - VISION_CLOSE_DIST) / VISION_RANGE))) * (DRIVE_SPEED - SLOW_DRIVE_SPEED) + SLOW_DRIVE_SPEED;
-
+      telemetry.addLine("Using strafe enhancement");
       double input_x;
       double input_y;
 
       // TODO: Update all driver controls and make the strafing enhancement accessible by a button
-      input_x = Math.pow(-g1.left_stick_y, 3) * speed;
-      input_y = Math.pow(-g1.left_stick_x, 3) * speed;
+      input_x = Math.pow(-g1.left_stick_y, 3);
+      input_y = Math.pow(-g1.left_stick_x, 3);
       Log.d("input_x", Double.toString(input_x));
       Log.d("input_y", Double.toString(input_y));
 
@@ -256,6 +243,9 @@ public class ManualDriveEnhancements extends LinearOpMode {
       double headingError = MathFunctions.getSmallestAngleDifference(desiredHeading, currentHeading)
               * MathFunctions.getTurnDirection(currentHeading, desiredHeading);
       Log.d("desiredHeadingError:", Double.toString(Math.toDegrees(headingError)));
+
+      // The translational correction can work if the robot is parallel to the x-axis.
+      // Otherwise it won't work as well so the translational correction is not used.
 
       Log.d("desiredxPos", Double.toString(desiredxPos));
       double currentxPos = currentPose.position.x;
@@ -278,12 +268,6 @@ public class ManualDriveEnhancements extends LinearOpMode {
 //      driveVector.setMagnitude(MathFunctions.clamp(driveVector.getMagnitude(), 0, 1));
       // driveVector components are the gamepad x and y values, assuming that they are in the same direction
       // as the x-axis and y-axis.
-      driveVector.setOrthogonalComponents(input_x, input_y);
-      // magnitude is set between 0 and 1
-      driveVector.setMagnitude(MathFunctions.clamp(driveVector.getMagnitude(), 0, 1));
-      // driveVector is rotated by the robot's heading.
-//      driveVector.rotateVector(follower.getPose().heading.toDouble());
-
       Log.d("Drive Vector XPos:", Double.toString(driveVector.getXComponent()));
       Log.d("Drive Vector YPos:", Double.toString(driveVector.getYComponent()));
 
@@ -297,8 +281,7 @@ public class ManualDriveEnhancements extends LinearOpMode {
       Log.d("Heading Vector XPos:", Double.toString(headingVector.getXComponent()));
       Log.d("Heading Vector YPos:", Double.toString(headingVector.getYComponent()));
 
-      // for now no centripetal force correction
-      follower.setMovementVectors(new Vector(0, 0), headingVector, driveVector);
+      follower.setTeleOpMovementVectors(input_x, input_y, headingError, true, true);
       follower.update();
 
       Log.d("X Position:", Double.toString(follower.getPose().position.x));

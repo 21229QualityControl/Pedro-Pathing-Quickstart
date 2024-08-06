@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.follower;
 
+import static org.firstinspires.ftc.teamcode.opmode.ManualDriveEnhancements.desiredHeading;
 import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.drivePIDFSwitch;
 import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.forwardZeroPowerAcceleration;
 import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.headingPIDFSwitch;
@@ -138,6 +139,7 @@ public class Follower {
     private FilteredPIDFController smallDrivePIDF = new FilteredPIDFController(FollowerConstants.smallDrivePIDFCoefficients);
 //    private final PIDFController largeDrivePIDF = new PIDFController(FollowerConstants.largeDrivePIDFCoefficients);
     private FilteredPIDFController largeDrivePIDF = new FilteredPIDFController(FollowerConstants.largeDrivePIDFCoefficients);
+    private final PIDFController teleopHeadingPIDF = new PIDFController(FollowerConstants.teleOpHeadingPIDFCoefficients);
 
     private KalmanFilter driveKalmanFilter = new KalmanFilter(FollowerConstants.driveKalmanFilterParameters);
     private long[] driveErrorTimes;
@@ -614,7 +616,7 @@ public class Follower {
      * @param heading determines the heading vector for the robot in teleop.
      */
     public void setTeleOpMovementVectors(double forwardDrive, double lateralDrive, double heading) {
-        setTeleOpMovementVectors(forwardDrive, lateralDrive, heading, true);
+        setTeleOpMovementVectors(forwardDrive, lateralDrive, heading, true, true);
     }
 
     /**
@@ -627,7 +629,7 @@ public class Follower {
      * @param heading determines the heading vector for the robot in teleop.
      * @param robotCentric sets if the movement will be field or robot centric
      */
-    public void setTeleOpMovementVectors(double forwardDrive, double lateralDrive, double heading, boolean robotCentric) {
+    public void setTeleOpMovementVectors(double forwardDrive, double lateralDrive, double heading, boolean robotCentric, boolean headingLock) {
         teleopDriveValues[0] = MathFunctions.clamp(forwardDrive, -1, 1);
         teleopDriveValues[1] = MathFunctions.clamp(lateralDrive, -1, 1);
         teleopDriveValues[2] = MathFunctions.clamp(heading, -1, 1);
@@ -638,7 +640,14 @@ public class Follower {
             teleopDriveVector.rotateVector(getPose().heading.toDouble());
         }
 
-        teleopHeadingVector.setComponents(teleopDriveValues[2], getPose().heading.toDouble());
+        if (headingLock == true) {
+            teleopHeadingPIDF.updateError(headingError);
+            teleopHeadingVector.setComponents(MathFunctions.clamp(
+                    teleopHeadingPIDF.runPIDF() + smallHeadingPIDFFeedForward * MathFunctions.getTurnDirection(getPose().heading.toDouble(),
+                            desiredHeading), -1, 1), getPose().heading.toDouble());
+        } else {
+            teleopHeadingVector.setComponents(teleopDriveValues[2], getPose().heading.toDouble());
+        }
     }
 
     /**
