@@ -34,7 +34,7 @@ public class BlueRight2_7 extends AutoBase {
             new Point(32, 35, Point.CARTESIAN)
     };
     public static Point spikeBackedOut = new Point(-48, 50, Point.CARTESIAN);
-    public static Point intermediate = new Point(-36, 60, Point.CARTESIAN); // y=56
+    public static Point intermediate = new Point(-36, 56, Point.CARTESIAN); // y=56
     public static Point pastTruss = new Point(30, 56, Point.CARTESIAN);
     public static Point stack = new Point(-56, 38, Point.CARTESIAN);
     public static Point stackPosition2 = new Point(-56.5, 32, Point.CARTESIAN);
@@ -95,8 +95,8 @@ public class BlueRight2_7 extends AutoBase {
         toTruss.setLinearHeadingInterpolation(Math.toRadians(205), Math.toRadians(180), 0.9);
 
         Path toBackstage = new Path(new BezierCurve(
-//                intermediate,
-                new Point(-36, 60, Point.CARTESIAN), //56
+                intermediate,
+//                new Point(-36, 60, Point.CARTESIAN), //56
                 new Point(20, 60, Point.CARTESIAN), //56
                 pastTruss,
                 new Point(40, 40, Point.CARTESIAN),
@@ -107,15 +107,16 @@ public class BlueRight2_7 extends AutoBase {
         toBackstage.setConstantHeadingInterpolation(Math.toRadians(180));
 
         Path testPath = new Path(new BezierLine(
-                new Point(-36, 59, Point.CARTESIAN),
+                new Point(-36, 56, Point.CARTESIAN),
                 new Point(-36, 40, Point.CARTESIAN)
         ));
 
         PathChain scoringPath = follower.pathBuilder().addPath(toTruss).addPath(toBackstage).build();
 
         sched.addAction(new ParallelAction(
-                new FollowPathAction(follower, scoringPath, new Point(-36, 59, Point.CARTESIAN),
-                        testPath, -60, 24),
+//                new FollowPathAction(follower, scoringPath, new Point(-36, 59, Point.CARTESIAN),
+//                        testPath, -60, 24),
+                new FollowPathAction(follower, scoringPath),
                 new SequentialAction(
                         new WaitPositionCommand(follower, -36, true, true),
                         intake.pixelCount() == 2 ? outtake.clawClosed() : outtake.clawSingleClosed(),
@@ -236,8 +237,7 @@ public class BlueRight2_7 extends AutoBase {
         toTruss.setLinearHeadingInterpolation(Math.toRadians(205), Math.toRadians(180), 0.8);
 
         Path toBackstage = new Path(new BezierCurve(
-//                intermediate,
-                new Point(-36, 56, Point.CARTESIAN),
+                intermediate,
                 new Point(20, 56, Point.CARTESIAN),
                 pastTruss,
                 new Point(40, 40, Point.CARTESIAN),
@@ -250,9 +250,9 @@ public class BlueRight2_7 extends AutoBase {
         PathChain scoringPath = follower.pathBuilder().addPath(toTruss).addPath(toBackstage).build();
 
         sched.addAction(new ParallelAction(
-                new FollowPathAction(follower, scoringPath, new Point(-36, 56, Point.CARTESIAN),
-                        toBackstage, -60, 24),
-//                new FollowPathAction(follower, scoringPath),
+//                new FollowPathAction(follower, scoringPath, new Point(-36, 56, Point.CARTESIAN),
+//                        toBackstage, -60, 24),
+                new FollowPathAction(follower, scoringPath),
                 new SequentialAction(
                         new WaitPositionCommand(follower, -36, true, true),
                         intake.pixelCount() == 2 ? outtake.clawClosed() : outtake.clawSingleClosed(),

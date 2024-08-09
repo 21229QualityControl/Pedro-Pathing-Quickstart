@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmode;
 
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.smallHeadingPIDFFeedForward;
-import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.smallTranslationalPIDFFeedForward;
+import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.secondaryHeadingPIDFFeedForward;
+import static org.firstinspires.ftc.teamcode.pedroPathing.tuning.FollowerConstants.secondaryTranslationalPIDFFeedForward;
 import static org.firstinspires.ftc.teamcode.util.control.PIDFControllerKt.EPSILON;
 
 import android.util.Log;
@@ -274,7 +274,7 @@ public class ManualDriveEnhancements extends LinearOpMode {
       // If robot heading is not the desired heading, the heading vector will correct it
       headingPIDF.updateError(headingError);
       headingVector.setComponents(MathFunctions.clamp(
-              headingPIDF.runPIDF() + smallHeadingPIDFFeedForward * MathFunctions.getTurnDirection(currentHeading,
+              headingPIDF.runPIDF() + secondaryHeadingPIDFFeedForward * MathFunctions.getTurnDirection(currentHeading,
                       desiredHeading), -1, 1), currentHeading);
       Log.d("desiredHeading Vector Angle:", Double.toString(headingVector.getTheta()));
       Log.d("desiredHeadingTurnDirection:", Double.toString(MathFunctions.getTurnDirection(currentHeading, desiredHeading)));
