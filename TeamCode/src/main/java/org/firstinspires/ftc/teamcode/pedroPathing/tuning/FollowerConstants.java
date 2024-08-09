@@ -30,25 +30,6 @@ public class FollowerConstants {
     private static double[] convertToPolar = Point.cartesianToPolar(xMovement, -yMovement);
     public static Vector frontLeftVector = MathFunctions.normalizeVector(new Vector(convertToPolar[0],convertToPolar[1]));
 
-    // Large heading error PIDF coefficients
-    public static CustomPIDFCoefficients largeHeadingPIDFCoefficients = new CustomPIDFCoefficients(
-            3,
-            0,
-            0.2,
-            0);
-
-    // Feed forward constant added on to the large heading PIDF
-    public static double largeHeadingPIDFFeedForward = 0.01;
-
-    // the limit at which the heading PIDF switches between the large and small heading PIDFs
-    public static double headingPIDFSwitch = Math.PI/20;
-
-    // Small heading error PIDF coefficients
-    public static CustomPIDFCoefficients smallHeadingPIDFCoefficients = new CustomPIDFCoefficients(
-            2,
-            0,
-            0.05,
-            0);
 
     // Small TeleOp heading error PIDF coefficients
     public static CustomPIDFCoefficients teleOpHeadingPIDFCoefficients = new CustomPIDFCoefficients(
@@ -57,35 +38,22 @@ public class FollowerConstants {
             0.05,
             0);
 
-    // Feed forward constant added on to the small heading PIDF
-    public static double smallHeadingPIDFFeedForward = 0.01;
-
-    // Large translational PIDF coefficients
-    public static CustomPIDFCoefficients largeTranslationalPIDFCoefficients = new CustomPIDFCoefficients(
+    // Translational PIDF coefficients (don't use integral)
+    public static CustomPIDFCoefficients translationalPIDFCoefficients = new CustomPIDFCoefficients(
             0.1,
             0,
             0,
             0);
 
-    // Feed forward constant added on to the large translational PIDF
-    public static double largeTranslationalPIDFFeedForward = 0.015;
-
-    // Large translational Integral
-    public static CustomPIDFCoefficients largeTranslationalIntegral = new CustomPIDFCoefficients(
+    // Translational Integral
+    public static CustomPIDFCoefficients translationalIntegral = new CustomPIDFCoefficients(
             0,
             0,
             0,
             0);
 
-    // the limit at which the strafe PIDF switches between the large and small translational PIDFs
-    public static double translationalPIDFSwitch = 3;
-
-    // Small translational PIDF coefficients
-    public static CustomPIDFCoefficients smallTranslationalPIDFCoefficients = new CustomPIDFCoefficients(
-            0.1,
-            0,
-            0.04,
-            0);
+    // Feed forward constant added on to the translational PIDF
+    public static double translationalPIDFFeedForward = 0.015;
 
     // TeleOp Translational PIDF Coefficients
     public static CustomPIDFCoefficients teleOpTranslationalPIDFCoefficients = new CustomPIDFCoefficients(
@@ -94,79 +62,27 @@ public class FollowerConstants {
             0.01,
             0);
 
-    // Small translational Integral value
-    public static CustomPIDFCoefficients smallTranslationalIntegral = new CustomPIDFCoefficients(
+    // Heading error PIDF coefficients
+    public static CustomPIDFCoefficients headingPIDFCoefficients = new CustomPIDFCoefficients(
+            3,
             0,
-            0,
-            0,
+            0.2,
             0);
 
+    // Feed forward constant added on to the heading PIDF
+    public static double headingPIDFFeedForward = 0.01;
 
-    // Feed forward constant added on to the small translational PIDF
-    public static double smallTranslationalPIDFFeedForward = 0.015;
 
-    // Large drive PIDF coefficients
-//    public static CustomPIDFCoefficients largeDrivePIDFCoefficients = new CustomPIDFCoefficients(
-//            0.015,
-//            0,
-//            0.00005,
-//            0);
-//
-//    // Large drive PIDF coefficients
-//    public static CustomFilteredPIDFCoefficients largeDrivePIDFCoefficients = new CustomFilteredPIDFCoefficients(
-//            0.015,
-//            0,
-//            0.00005,
-//            0.01,
-//            0);
-//    // Feed forward constant added on to the large drive PIDF
-//    public static double largeDrivePIDFFeedForward = 0.01;
-//
-//    // the limit at which the direction PIDF switches between the large and small drive PIDFs
-//    public static double drivePIDFSwitch = 10;
-//
-//    // Small drive PIDF coefficients
-//    public static CustomPIDFCoefficients smallDrivePIDFCoefficients = new CustomPIDFCoefficients(
-//            0.01,
-//            0,
-//            0.000003,
-//            0);
-//
-//    // Small drive PIDF coefficients
-//    public static CustomFilteredPIDFCoefficients smallDrivePIDFCoefficients = new CustomFilteredPIDFCoefficients(
-//            0.01,
-//            0,
-//            0.000003,
-//            0.01,
-//            0);
-//
-//    // Feed forward constant added on to the small drive PIDF
-//    public static double smallDrivePIDFFeedForward = 0.01;
-
-    // Large drive PIDF coefficients
-    public static CustomFilteredPIDFCoefficients largeDrivePIDFCoefficients = new CustomFilteredPIDFCoefficients(
+    // Drive PIDF coefficients
+    public static CustomFilteredPIDFCoefficients drivePIDFCoefficients = new CustomFilteredPIDFCoefficients(
             0.015, // 0.015
             0,
             0.00005,
             0.06,
             0);
 
-    // Feed forward constant added on to the large drive PIDF
-    public static double largeDrivePIDFFeedForward = 0.01;
-
-    // the limit at which the heading PIDF switches between the large and small drive PIDFs
-    public static double drivePIDFSwitch = 10;
-
-    // Small drive PIDF coefficients
-    public static CustomFilteredPIDFCoefficients smallDrivePIDFCoefficients = new CustomFilteredPIDFCoefficients(
-            0.01,
-            0,
-            0.000003,
-            0.06,
-            0);
-
-    // Feed forward constant added on to the small drive PIDF
-    public static double smallDrivePIDFFeedForward = 0.03; // 0.01
+    // Feed forward constant added on to the drive PIDF
+    public static double drivePIDFFeedForward = 0.01;
 
     // Kalman filter parameters for the drive error Kalman filter
     public static KalmanFilterParameters driveKalmanFilterParameters = new KalmanFilterParameters(
@@ -181,13 +97,11 @@ public class FollowerConstants {
     public static double mass = 13.8;
 
     // Centripetal force to power scaling
-    // todo: there are currently issues with the centripetal force correction, so just don't use it for now
-    // i will fix these in another commit soon
     public static double centripetalScaling = 0.0003;
+
 
     // Acceleration of the drivetrain when power is cut in inches/second^2 (should be negative)
     // if not negative, then the robot thinks that its going to go faster under 0 power
-    // this is for curves
     public static double forwardZeroPowerAcceleration = -27.24125;;//-30.4551;
 
     // Acceleration of the drivetrain when power is cut in inches/second^2 (should be negative)
@@ -225,7 +139,7 @@ public class FollowerConstants {
     public static double pathEndTValueConstraint = 0.990;
 
     // When the Path is considered at its end parametrically, then the Follower has this many
-    // seconds to further correct by default.
+    // milliseconds to further correct by default.
     // This can be custom set for each Path.
     public static double pathEndTimeoutConstraint = 100.0;
 
@@ -247,4 +161,62 @@ public class FollowerConstants {
     // accuracy, and this increases at an exponential rate. However, more steps also does take more
     // time.
     public static int BEZIER_CURVE_BINARY_STEP_LIMIT = 10;
+
+
+    // These activate / deactivate the secondary PIDs. These take over at errors under a set limit for
+    // the translational, heading, and drive PIDs.
+    public static boolean useSecondaryTranslationalPID = false;
+    public static boolean useSecondaryHeadingPID = false;
+    public static boolean useSecondaryDrivePID = false;
+
+
+    // the limit at which the translational PIDF switches between the main and secondary translational PIDFs,
+    // if the secondary PID is active
+    public static double translationalPIDFSwitch = 3;
+
+    // Secondary translational PIDF coefficients (don't use integral)
+    public static CustomPIDFCoefficients secondaryTranslationalPIDFCoefficients = new CustomPIDFCoefficients(
+            0.3,
+            0,
+            0.01,
+            0);
+
+    // Secondary translational Integral value
+    public static CustomPIDFCoefficients secondaryTranslationalIntegral = new CustomPIDFCoefficients(
+            0,
+            0,
+            0,
+            0);
+
+    // Feed forward constant added on to the small translational PIDF
+    public static double secondaryTranslationalPIDFFeedForward = 0.015;
+
+
+    // the limit at which the heading PIDF switches between the main and secondary heading PIDFs
+    public static double headingPIDFSwitch = Math.PI/20;
+
+    // Secondary heading error PIDF coefficients
+    public static CustomPIDFCoefficients secondaryHeadingPIDFCoefficients = new CustomPIDFCoefficients(
+            5,
+            0,
+            0.08,
+            0);
+
+    // Feed forward constant added on to the secondary heading PIDF
+    public static double secondaryHeadingPIDFFeedForward = 0.01;
+
+
+    // the limit at which the heading PIDF switches between the main and secondary drive PIDFs
+    public static double drivePIDFSwitch = 20;
+
+    // Secondary drive PIDF coefficients
+    public static CustomFilteredPIDFCoefficients secondaryDrivePIDFCoefficients = new CustomFilteredPIDFCoefficients(
+            0.02,
+            0,
+            0.000005,
+            0.6,
+            0);
+
+    // Feed forward constant added on to the secondary drive PIDF
+    public static double secondaryDrivePIDFFeedForward = 0.01;
 }
