@@ -44,7 +44,6 @@ public class ManualDriveEnhancements extends LinearOpMode {
    public static double SLOW_DRIVE_SPEED = 0.3;
    public static double VISION_RANGE = 20;
    public static double VISION_CLOSE_DIST = 5;
-   // TODO: Make these configurable when the driver presses a button?
    public static double desiredHeading;
    public static double desiredxPos;
 
@@ -514,6 +513,7 @@ public class ManualDriveEnhancements extends LinearOpMode {
    private void ledUpdate() {
       if (isStrafeEnhanced == true) {
          led.setPattern(RevBlinkinLedDriver.BlinkinPattern.SHOT_RED);
+         telemetry.addLine("Strafe Enhancing: True");
       }
       int pixelCount = intake.pixelCount();
       if (pixelCount == 1) {

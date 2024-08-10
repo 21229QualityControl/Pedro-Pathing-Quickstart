@@ -640,7 +640,7 @@ public class Follower {
         }
 
         if (headingLock == true) {
-            teleopHeadingPIDF.updateError(headingError);
+            teleopHeadingPIDF.updateError(heading);
             teleopHeadingVector.setComponents(MathFunctions.clamp(
                     teleopHeadingPIDF.runPIDF() + secondaryHeadingPIDFFeedForward * MathFunctions.getTurnDirection(getPose().heading.toDouble(),
                             desiredHeading), -1, 1), getPose().heading.toDouble());
