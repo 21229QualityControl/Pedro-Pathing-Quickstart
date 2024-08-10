@@ -165,9 +165,9 @@ public class FollowerConstants {
 
     // These activate / deactivate the secondary PIDs. These take over at errors under a set limit for
     // the translational, heading, and drive PIDs.
-    public static boolean useSecondaryTranslationalPID = false;
-    public static boolean useSecondaryHeadingPID = false;
-    public static boolean useSecondaryDrivePID = false;
+    public static boolean useSecondaryTranslationalPID = true;
+    public static boolean useSecondaryHeadingPID = true;
+    public static boolean useSecondaryDrivePID = true;
 
 
     // the limit at which the translational PIDF switches between the main and secondary translational PIDFs,
@@ -176,9 +176,9 @@ public class FollowerConstants {
 
     // Secondary translational PIDF coefficients (don't use integral)
     public static CustomPIDFCoefficients secondaryTranslationalPIDFCoefficients = new CustomPIDFCoefficients(
-            0.3,
+            0.1,
             0,
-            0.01,
+            0.04,
             0);
 
     // Secondary translational Integral value
@@ -197,9 +197,9 @@ public class FollowerConstants {
 
     // Secondary heading error PIDF coefficients
     public static CustomPIDFCoefficients secondaryHeadingPIDFCoefficients = new CustomPIDFCoefficients(
-            5,
+            2,
             0,
-            0.08,
+            0.05,
             0);
 
     // Feed forward constant added on to the secondary heading PIDF
@@ -207,16 +207,16 @@ public class FollowerConstants {
 
 
     // the limit at which the heading PIDF switches between the main and secondary drive PIDFs
-    public static double drivePIDFSwitch = 20;
+    public static double drivePIDFSwitch = 10;
 
     // Secondary drive PIDF coefficients
     public static CustomFilteredPIDFCoefficients secondaryDrivePIDFCoefficients = new CustomFilteredPIDFCoefficients(
-            0.02,
+            0.01,
             0,
-            0.000005,
-            0.6,
+            0.000003,
+            0.06,
             0);
 
     // Feed forward constant added on to the secondary drive PIDF
-    public static double secondaryDrivePIDFFeedForward = 0.01;
+    public static double secondaryDrivePIDFFeedForward = 0.03;
 }
