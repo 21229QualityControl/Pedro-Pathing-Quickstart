@@ -217,7 +217,7 @@ public class ManualDriveEnhancements extends LinearOpMode {
          led.setPattern(RevBlinkinLedDriver.BlinkinPattern.ORANGE);
          strafeEnhancement();
       } else {
-         follower.setTeleOpMovementVectors(input_x, input_y, input_turn, true, false);
+         follower.setTeleOpMovementVectors(input_x, input_y, input_turn, true);
          follower.update();
       }
    }
@@ -280,7 +280,7 @@ public class ManualDriveEnhancements extends LinearOpMode {
       Log.d("Heading Vector XPos:", Double.toString(headingVector.getXComponent()));
       Log.d("Heading Vector YPos:", Double.toString(headingVector.getYComponent()));
 
-      follower.setTeleOpMovementVectors(input_x, input_y, headingError, true, true);
+      follower.setTeleOpMovementVectors(input_x, input_y, headingError, true, true, desiredHeading);
       follower.update();
 
       Log.d("X Position:", Double.toString(follower.getPose().position.x));

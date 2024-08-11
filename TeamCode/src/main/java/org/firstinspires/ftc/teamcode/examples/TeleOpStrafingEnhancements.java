@@ -85,7 +85,7 @@ public class TeleOpStrafingEnhancements extends OpMode {
             strafeEnhancement();
         } else {
             // Normal driving
-            follower.setTeleOpMovementVectors(-g1.left_stick_y, -g1.left_stick_x, -gamepad1.right_stick_x, true, false);
+            follower.setTeleOpMovementVectors(-g1.left_stick_y, -g1.left_stick_x, -gamepad1.right_stick_x, true);
             follower.update();
         }
     }
@@ -103,7 +103,7 @@ public class TeleOpStrafingEnhancements extends OpMode {
         double headingError = MathFunctions.getSmallestAngleDifference(desiredHeading, currentHeading)
                 * MathFunctions.getTurnDirection(currentHeading, desiredHeading);
 
-        follower.setTeleOpMovementVectors(input_x, input_y, headingError, true, true);
+        follower.setTeleOpMovementVectors(input_x, input_y, headingError, true, true, desiredHeading);
         follower.update();
     }
 }
