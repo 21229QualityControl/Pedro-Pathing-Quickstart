@@ -545,26 +545,26 @@ public class Follower {
                                 reachedParametricPathEnd = true;
                                 reachedParametricPathEndTime = System.currentTimeMillis();
                             }
-                        }
-                        if(logDebug) {
-                            Log.d("Follower_Logger_stop",
-                                    String.format("time:%3.3f,timeout:%3.3f,velocity:%3.3f|%3.3f, distance:%3.3f|%3.3f, heading:%3.3f|%3.3f",
-                                            (System.currentTimeMillis() - reachedParametricPathEndTime) * 1.0,
-                                            currentPath.getPathEndTimeoutConstraint(),
-                                            currentPath.getPathEndVelocityConstraint(),
-                                            poseUpdater.getVelocity().getMagnitude(),
-                                            MathFunctions.distance(poseUpdater.getPose(), closestPose),
-                                            currentPath.getPathEndTranslationalConstraint(),
-                                            MathFunctions.getSmallestAngleDifference(poseUpdater.getPose().heading.toDouble(), currentPath.getClosestPointHeadingGoal()),
-                                            currentPath.getPathEndHeadingConstraint()
-                                    ));
-                        }
-                        if ((System.currentTimeMillis() - reachedParametricPathEndTime > currentPath.getPathEndTimeoutConstraint()) || (poseUpdater.getVelocity().getMagnitude() < currentPath.getPathEndVelocityConstraint() && MathFunctions.distance(poseUpdater.getPose(), closestPose) < currentPath.getPathEndTranslationalConstraint() && MathFunctions.getSmallestAngleDifference(poseUpdater.getPose().heading.toDouble(), currentPath.getClosestPointHeadingGoal()) < currentPath.getPathEndHeadingConstraint())) {
-                            if (holdPositionAtEnd) {
-                                holdPositionAtEnd = false;
-                                holdPoint(new BezierPoint(currentPath.getLastControlPoint()), currentPath.getHeadingGoal(1));
-                            } else {
-                                breakFollowing();
+                            if (logDebug) {
+                                Log.d("Follower_Logger_stop",
+                                        String.format("time:%3.3f,timeout:%3.3f,velocity:%3.3f|%3.3f, distance:%3.3f|%3.3f, heading:%3.3f|%3.3f",
+                                                (System.currentTimeMillis() - reachedParametricPathEndTime) * 1.0,
+                                                currentPath.getPathEndTimeoutConstraint(),
+                                                currentPath.getPathEndVelocityConstraint(),
+                                                poseUpdater.getVelocity().getMagnitude(),
+                                                MathFunctions.distance(poseUpdater.getPose(), closestPose),
+                                                currentPath.getPathEndTranslationalConstraint(),
+                                                MathFunctions.getSmallestAngleDifference(poseUpdater.getPose().heading.toDouble(), currentPath.getClosestPointHeadingGoal()),
+                                                currentPath.getPathEndHeadingConstraint()
+                                        ));
+                            }
+                            if ((System.currentTimeMillis() - reachedParametricPathEndTime > currentPath.getPathEndTimeoutConstraint()) || (poseUpdater.getVelocity().getMagnitude() < currentPath.getPathEndVelocityConstraint() && MathFunctions.distance(poseUpdater.getPose(), closestPose) < currentPath.getPathEndTranslationalConstraint() && MathFunctions.getSmallestAngleDifference(poseUpdater.getPose().heading.toDouble(), currentPath.getClosestPointHeadingGoal()) < currentPath.getPathEndHeadingConstraint())) {
+                                if (holdPositionAtEnd) {
+                                    holdPositionAtEnd = false;
+                                    holdPoint(new BezierPoint(currentPath.getLastControlPoint()), currentPath.getHeadingGoal(1));
+                                } else {
+                                    breakFollowing();
+                                }
                             }
                         }
                     }
