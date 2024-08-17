@@ -125,45 +125,36 @@ public class FollowPathAction implements Action {
             Log.d("Interfered:","true");
             Log.d("BreakFollowing:", "true");
             // Stop following the path, create the failsafe path
-            m_follower.breakFollowing();
+            // m_follower.breakFollowing();
             Pose2d currentPose = m_follower.getPose();
-//            failsafePath = new Path(new BezierCurve(
-//                    new Point(currentPose.position.x, currentPose.position.y, Point.CARTESIAN),
-//                    failsafe,
-//                    new Point(20, 56, Point.CARTESIAN)
-//            ));
-            failsafePath = new Path(new BezierCurve(
+            failsafePath = new Path(new BezierLine(
                     new Point(currentPose.position.x, currentPose.position.y, Point.CARTESIAN),
-                    new Point(-60, 56, Point.CARTESIAN),
-                    new Point(-36, 56, Point.CARTESIAN),
-                    new Point(20, 56, Point.CARTESIAN)
+                    failsafe
             ));
             failsafePath.setConstantHeadingInterpolation(Math.toRadians(180));
-            failsafePath.setZeroPowerAccelerationMultiplier(6);
-//            failsafePath.setPathEndTValueConstraint(0.75);
-            // Create a new path chain with the failsafe path and the alternate path
-//            failsafePathChain = m_follower.pathBuilder().addPath(failsafePath).addPath(alternatePath).build();
+//             Create a new path chain with the failsafe path and the alternate path
+            failsafePathChain = m_follower.pathBuilder().addPath(failsafePath).addPath(alternatePath).build();
         }
 
         if (!interfered) { // If the robot is not interfered, follow the original path(chain).
-            Log.d("Following normal path:","false");
+            Log.d("Following normal path:", "true");
             if (!started) {
                 if (m_path != null) {
                     m_follower.followPath(m_path, holdEnd);
                 } else if (m_pathChain != null) {
                     m_follower.followPath(m_pathChain, holdEnd);
                 }
-                started = true;
             }
-        } else {
-            // If the robot has been interfered, follow the failsafe pathchain.
-//           m_follower.followPath(failsafePathChain, holdEnd);
-           m_follower.followPath(failsafePath, true);
-           Log.d("Following failsafePathChain:", "true");
-//           lowVelocity = false;
-            // After we used the failsafe it's unlikely we'll need it again
-            useFailsafe = false;
-        }
+                started = true;
+            } else {
+                // If the robot has been interfered, follow the failsafe pathchain.
+                if (useFailsafe == true) {
+                    m_follower.followPath(failsafePathChain, false);
+                    Log.d("Following failsafePathChain:", "true");
+                }
+                // After we used the failsafe we won't need it again
+                useFailsafe = false;
+            }
 
         m_follower.update();
 

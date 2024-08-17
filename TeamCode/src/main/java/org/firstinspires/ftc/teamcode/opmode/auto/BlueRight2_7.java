@@ -34,7 +34,7 @@ public class BlueRight2_7 extends AutoBase {
             new Point(32, 35, Point.CARTESIAN)
     };
     public static Point spikeBackedOut = new Point(-48, 50, Point.CARTESIAN);
-    public static Point intermediate = new Point(-36, 56, Point.CARTESIAN); // y=56
+    public static Point intermediate = new Point(-36, 50, Point.CARTESIAN); // y=56
     public static Point pastTruss = new Point(30, 56, Point.CARTESIAN);
     public static Point stack = new Point(-56, 38, Point.CARTESIAN);
     public static Point stackPosition2 = new Point(-56.5, 32, Point.CARTESIAN);
@@ -97,7 +97,7 @@ public class BlueRight2_7 extends AutoBase {
         Path toBackstage = new Path(new BezierCurve(
                 intermediate,
 //                new Point(-36, 60, Point.CARTESIAN), //56
-                new Point(20, 60, Point.CARTESIAN), //56
+                new Point(20, 50, Point.CARTESIAN), //56
                 pastTruss,
                 new Point(40, 40, Point.CARTESIAN),
                 backdrop[SPIKE]
@@ -106,17 +106,23 @@ public class BlueRight2_7 extends AutoBase {
         toBackstage.setReversed(true);
         toBackstage.setConstantHeadingInterpolation(Math.toRadians(180));
 
-        Path testPath = new Path(new BezierLine(
-                new Point(-36, 56, Point.CARTESIAN),
-                new Point(-36, 40, Point.CARTESIAN)
+        Path alternatePath = new Path(new BezierCurve(
+                new Point(-40, 58, Point.CARTESIAN),
+                new Point(20, 58, Point.CARTESIAN),
+                pastTruss,
+                new Point(40, 40, Point.CARTESIAN),
+                backdrop[SPIKE]
         ));
+        alternatePath.setZeroPowerAccelerationMultiplier(3);
+        alternatePath.setReversed(true);
+        alternatePath.setConstantHeadingInterpolation(Math.toRadians(180));
 
         PathChain scoringPath = follower.pathBuilder().addPath(toTruss).addPath(toBackstage).build();
 
         sched.addAction(new ParallelAction(
-//                new FollowPathAction(follower, scoringPath, new Point(-36, 59, Point.CARTESIAN),
-//                        testPath, -60, 24),
-                new FollowPathAction(follower, scoringPath),
+                new FollowPathAction(follower, scoringPath, new Point(-40, 58, Point.CARTESIAN),
+                        alternatePath, -60, 24),
+//                new FollowPathAction(follower, scoringPath),
                 new SequentialAction(
                         new WaitPositionCommand(follower, -36, true, true),
                         intake.pixelCount() == 2 ? outtake.clawClosed() : outtake.clawSingleClosed(),
