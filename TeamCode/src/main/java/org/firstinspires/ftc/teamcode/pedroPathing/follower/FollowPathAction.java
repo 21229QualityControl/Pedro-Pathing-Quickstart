@@ -99,16 +99,18 @@ public class FollowPathAction implements Action {
         Log.d("BeforeEnd:", Boolean.toString(m_follower.getPose().position.x < endPathConstraint));
         Log.d("CurrentTime", Long.toString(System.currentTimeMillis()));
         Log.d("WaitUntil:", Long.toString(waitUntil));
-        Log.d("useFailsafe:", Boolean.toString(useFailsafe));
+        Log.d("UseFailsafe:", Boolean.toString(useFailsafe));
+        Log.d("OverTime:", Boolean.toString(System.currentTimeMillis() > waitUntil));
+        Log.d("FollowerIsBusy:", Boolean.toString(m_follower.isBusy()));
         // If the robot was moving at a high velocity and suddenly the velocity lowered,
         // then a timer is set to determine if the robot is actually interfered.
-        if (!lowVelocity && (Math.abs(m_follower.getVelocity().getMagnitude()) < 2)) {
+        if (!lowVelocity && (Math.abs(m_follower.getVelocity().getMagnitude()) < 10)) {
             this.waitUntil = System.currentTimeMillis() + 1500;
             lowVelocity = true;
             Log.d("lowVelocity:","true");
         }
 
-        if (Math.abs(m_follower.getVelocity().getMagnitude()) > 2) {
+        if (Math.abs(m_follower.getVelocity().getMagnitude()) > 10) {
             lowVelocity = false;
         }
 
@@ -125,9 +127,15 @@ public class FollowPathAction implements Action {
             // Stop following the path, create the failsafe path
             m_follower.breakFollowing();
             Pose2d currentPose = m_follower.getPose();
+//            failsafePath = new Path(new BezierCurve(
+//                    new Point(currentPose.position.x, currentPose.position.y, Point.CARTESIAN),
+//                    failsafe,
+//                    new Point(20, 56, Point.CARTESIAN)
+//            ));
             failsafePath = new Path(new BezierCurve(
                     new Point(currentPose.position.x, currentPose.position.y, Point.CARTESIAN),
-                    failsafe,
+                    new Point(-60, 56, Point.CARTESIAN),
+                    new Point(-36, 56, Point.CARTESIAN),
                     new Point(20, 56, Point.CARTESIAN)
             ));
             failsafePath.setConstantHeadingInterpolation(Math.toRadians(180));
@@ -150,7 +158,7 @@ public class FollowPathAction implements Action {
         } else {
             // If the robot has been interfered, follow the failsafe pathchain.
 //           m_follower.followPath(failsafePathChain, holdEnd);
-           m_follower.followPath(failsafePath, false);
+           m_follower.followPath(failsafePath, true);
            Log.d("Following failsafePathChain:", "true");
 //           lowVelocity = false;
             // After we used the failsafe it's unlikely we'll need it again
